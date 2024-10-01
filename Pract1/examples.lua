@@ -26,12 +26,12 @@ local function do_that_thing()
 
 end
 
--- Поганий приклад: Неправильні імена класів
+-- Поганий приклад найменування класів: Неправильні імена класів
 c_myclass = {}  -- Не відповідає CamelCase
 data = {}       -- Занадто абстрактне
 MyClassMgr = {} -- Використання скорочень
 
--- Гарний приклад: Правильні імена класів
+-- Гарний приклад найменування класів: Правильні імена класів
 Car = {}
 Person = {}
 XmlParser = {}
@@ -56,7 +56,27 @@ function MyClass:another_method()
     print("Hello from another method!")
 end
 
--- Поганий приклад: Відсутність організації, неправильні імена та коментарі
+-- Поганий приклад форматування
+
+for i, pkg in ipairs(packages) do
+	for name, version in pairs(pkg) do
+    if name == searched then
+          print(version)
+      end
+	end
+end
+
+-- Гарний приклад форматування
+
+for i, pkg in ipairs(packages) do
+    for name, version in pairs(pkg) do
+       if name == searched then
+          print(version)
+       end
+    end
+ end
+
+-- Поганий приклад структури коду: Відсутність організації, неправильні імена та коментарі
 
 -- Глобальні змінні без контексту
 x = 10
@@ -80,7 +100,7 @@ end
 
 b()  -- Виклик функції без контексту
 
--- Гарний  приклад:
+-- Гарний  приклад структури коду:
 
 -- Імпорт бібліотеки
 local MyModule = require("my_module")
@@ -98,7 +118,7 @@ end
 -- Виклик функцій
 local my_instance = MyClass:new("example")
 
--- Поганий приклад: повторюваний код, неясні імена та відсутність коментарів
+-- Поганий приклад дотримання принципів рефакторингу: повторюваний код, неясні імена та відсутність коментарів
 function calc_area(length, width)
     return length * width
 end
@@ -110,7 +130,7 @@ end
 result1 = calc_area(5, 10)
 result2 = calc_area2(7, 3)
 
--- Гарний приклад: уникнення дублювання, описові імена, коментарі
+-- Гарний приклад дотримання принципів рефакторингу: уникнення дублювання, описові імена, коментарі
 function calculate_area(length, width)
     return length * width
 end
@@ -118,7 +138,7 @@ end
 local rectangle_area = calculate_area(5, 10)
 local square_area = calculate_area(7, 7)  -- Використання тієї ж функції для обчислення площі квадрата
 
--- Поганий приклад: глобальні змінні, зайві виклики функцій у циклі
+-- Поганий приклад оптимізації: глобальні змінні, зайві виклики функцій у циклі
 count = 0  -- Глобальна змінна
 
 function calculate_square(n)
@@ -130,7 +150,7 @@ for i = 1, 100000 do
 end
 print(count)
 
--- Гарний приклад: використання локальних змінних, обчислення за межами циклу
+-- Гарний приклад оптимізації: використання локальних змінних, обчислення за межами циклу
 local count = 0  -- Локальна змінна
 
 local function calculate_square(n)
@@ -147,7 +167,7 @@ for _, square in ipairs(squares) do
 end
 print(count)
 
--- Поганий приклад: відсутня обробка помилок
+-- Поганий приклад обробки помилок: відсутня обробка помилок
 function divide(a, b)
     return a / b  -- Може викликати помилку при діленні на нуль
 end
@@ -155,7 +175,7 @@ end
 local result = divide(10, 0)  -- Викликає помилку
 print(result)  -- Код аварійно завершується
 
--- Гарний приклад: використання pcall для обробки помилок
+-- Гарний приклад обробки помилок: використання pcall для обробки помилок
 function divide(a, b)
     if b == 0 then
         error("Division by zero error")  -- Генерація власної помилки
@@ -211,22 +231,4 @@ describe("Функція add", function()
     end)
 end)
 
--- Поганий приклад форматування
 
-for i, pkg in ipairs(packages) do
-	for name, version in pairs(pkg) do
-    if name == searched then
-          print(version)
-      end
-	end
-end
-
--- Гарний приклад форматування
-
-for i, pkg in ipairs(packages) do
-    for name, version in pairs(pkg) do
-       if name == searched then
-          print(version)
-       end
-    end
- end
