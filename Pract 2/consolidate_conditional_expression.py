@@ -2,17 +2,17 @@
 class User:
     def __init__(self, login, status,valid):
         self.name = login
-        self.role = status
+        self.status = status
         self.valid = valid
 
 class UserManager:
     def notify_user(self, user):
         if user.valid:
-            if user.role == 'admin':
+            if user.status == 'admin':
                 print(f"Notify {user.login}: You are admin.")
-            elif user.role == 'editor':
+            elif user.status == 'editor':
                 print(f"Notify {user.login}: You can edit posts.")
-            elif user.role == 'viewer':
+            elif user.status == 'viewer':
                 print(f"Notify {user.login}: You are viewer.")
         else:
             print(f"Notify {user.login}: Your account is inactive.")
@@ -20,7 +20,7 @@ class UserManager:
 class User:
     def __init__(self, login, status, valid):
         self.name = login
-        self.role = status
+        self.status = status
         self.valid = valid
 
 # Код після рефакторингу

@@ -37,23 +37,26 @@ Person = {}
 XmlParser = {}
 
 -- Поганий приклад: використання неправильного регістру для класу та методів
-Myclass = {}
-function myMethod()
-    print("Hello!")
+CData_Mng = {}
+function retrieveData()
+    
 end
 
-function MYMETHOD()
-    print("UPPER!")
+function printInfoData()
+    
 end
 
 -- Гарний приклад: клас використовує CamelCase, а методи — snake_case
-MyClass = {}
-function MyClass:my_method()
-    print("Hello from my method!")
+CustomerDataManager = {}
+
+function CustomerDataManager:retrieve_data()
+    -- Логіка для отримання даних
+    print("Дані успішно отримані!")
 end
 
-function MyClass:another_method()
-    print("Hello from another method!")
+function CustomerDataManager:print_info_data()
+    -- Логіка для виведення інформації
+    print("Інформація про дані виведена!")
 end
 
 -- Поганий приклад форматування
@@ -103,20 +106,20 @@ b()  -- Виклик функції без контексту
 -- Гарний  приклад структури коду:
 
 -- Імпорт бібліотеки
-local MyModule = require("my_module")
+local DataProcessor = require("data_processor")
 
 -- Оголошення класу
-MyClass = {}
-MyClass.__index = MyClass
+UserManager = {}
+UserManager.__index = UserManager
 
-function MyClass:new(param)
-    local instance = setmetatable({}, MyClass)
-    instance.param = param
-    return instance
+function UserManager:new(user_name)
+    local user_instance = setmetatable({}, UserManager)
+    user_instance.user_name = user_name
+    return user_instance
 end
 
 -- Виклик функцій
-local my_instance = MyClass:new("example")
+local user_manager = UserManager:new("JohnDoe")
 
 -- Поганий приклад дотримання принципів рефакторингу: повторюваний код, неясні імена та відсутність коментарів
 function calc_area(length, width)
