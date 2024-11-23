@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 class RoleUser(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -58,18 +59,37 @@ class StationOfContainers(models.Model):
     station_of_containers_name = models.CharField(max_length=100)  
     latitude_location = models.FloatField()
     longitude_location = models.FloatField()
-    status_station = models.ForeignKey(StationOfContainersStatus, on_delete=models.SET_NULL, null=True, blank=True)
-    last_reserved = models.DateTimeField(unique=True)
-    
+    status_station = models.ForeignKey(
+        StationOfContainersStatus, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
+    last_reserved = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.status_station:
+            active_status, created = StationOfContainersStatus.objects.get_or_create(
+                station_status_name="Active"
+            )
+            self.status_station = active_status
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.station_of_containers_name
-    
     
 class CollectionSchedules(models.Model):
     station_of_containers_id = models.ForeignKey(StationOfContainers, on_delete=models.SET_NULL, null=True, blank=True)
     collection_date = models.DateTimeField(unique=True)
 
+    def clean(self):
+        if self.collection_date < timezone.now():
+            raise ValidationError("Дата збору не може бути в минулому.")
+    
+    def save(self, *args, **kwargs):
+        self.full_clean() 
+        super().save(*args, **kwargs)  
+        
     def __str__(self):
         return self.station_of_containers_id
     
