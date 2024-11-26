@@ -21,8 +21,8 @@ def check_container_fill_level(sender, instance, created, **kwargs):
                     for operator in operators:
                         NotificationsUser.objects.create(
                             user_id=operator,
-                            message=f"Контейнер {container.id} на станції '{container.station_id.station_of_containers_name}' потребує обслуговування поза графіком.",
-                            notification_type=NotificationTypes.objects.get_or_create(type_notification_name="Позапланове обслуговування")[0],
+                            message=f"Container {container.id} on station '{container.station_id.station_of_containers_name}' must be reserved right now.",
+                            notification_type=NotificationTypes.objects.get_or_create(type_notification_name="Extra")[0],
                             timestamp_get_notification=now(),
                             station_id=container.station_id
                         )

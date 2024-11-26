@@ -56,15 +56,10 @@ class StationOfContainersStatus(models.Model):
         return self.station_status_name
     
 class StationOfContainers(models.Model):
-    station_of_containers_name = models.CharField(max_length=100)  
+    station_of_containers_name = models.CharField(max_length=100, unique=True)  
     latitude_location = models.FloatField()
     longitude_location = models.FloatField()
-    status_station = models.ForeignKey(
-        StationOfContainersStatus, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True
-    )
+    status_station = models.ForeignKey(StationOfContainersStatus, on_delete=models.SET_NULL, null=True, blank=True)
     last_reserved = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
@@ -81,10 +76,6 @@ class StationOfContainers(models.Model):
 class CollectionSchedules(models.Model):
     station_of_containers_id = models.ForeignKey(StationOfContainers, on_delete=models.SET_NULL, null=True, blank=True)
     collection_date = models.DateTimeField(unique=True)
-
-    def clean(self):
-        if self.collection_date < timezone.now():
-            raise ValidationError("Дата збору не може бути в минулому.")
     
     def save(self, *args, **kwargs):
         self.full_clean() 
@@ -136,12 +127,9 @@ class Containers(models.Model):
         return round((latest_filling.sensor_value / 100) * self.type_of_container_id.volume_container,2)
 
     def save(self, *args, **kwargs):
-        if self.status_container_id is None:
-            try:
-                active_container_status = StatusOfContainer.objects.get(status_name="Active")
-                self.status_container_id = active_container_status
-            except StatusOfContainer.DoesNotExist:
-                raise ValueError("Тип контейнера з назвою 'Active' не знайдено. Створіть його перед створенням контейнера.")
+        if not self.status_container_id:
+            active_container_status, created = StatusOfContainer.objects.get_or_create(status_name="Active")
+            self.status_container_id = active_container_status
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -151,12 +139,6 @@ class IoTFillingContainer(models.Model):
     container_id_filling = models.ForeignKey('Containers', on_delete=models.SET_NULL, null=True, blank=True)
     sensor_value = models.FloatField()
     time_of_detect = models.DateTimeField(auto_now_add=True)
-
-    def clean(self):
-        if self.sensor_value > 100:
-            raise ValidationError("Значення 'sensor_value' не може перевищувати 100.")
-        if self.sensor_value <= 0:
-            raise ValidationError("Значення 'sensor_value' не може бути від’ємним.")
 
     def save(self, *args, **kwargs):
         self.full_clean() 
