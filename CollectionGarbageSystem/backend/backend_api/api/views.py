@@ -127,3 +127,4 @@ class IoTFillingContainerViewSet(GenericViewSet):
 class WasteHistoryViewSet(GenericViewSet):
     queryset = WasteHistory.objects.all()
     serializer_class = WasteHistorySerializer
+

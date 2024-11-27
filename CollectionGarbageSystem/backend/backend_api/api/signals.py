@@ -63,3 +63,4 @@ def update_station_status_on_schedule(sender, instance, created, **kwargs):
         station = instance.station_of_containers_id
         station.status_station = get_reserving_status()
         station.save()
+

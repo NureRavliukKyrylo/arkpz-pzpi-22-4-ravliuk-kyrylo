@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.contrib.auth import login as auth_login, logout as auth_logout
@@ -9,6 +9,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from backend_api.api.serializers import MyTokenObtainPairSerializer
 from .models import CustomUser
 from django.contrib.auth.hashers import check_password
+from .models import WasteHistory
+from backend_api.api.validators import validate_date_range
+from backend_api.api.pdf_generators import generate_waste_report_pdf
+
 
 @csrf_exempt
 def registerCustomer(request):
@@ -78,3 +82,27 @@ class MineTokenObtainPairView(TokenObtainPairView):
 def logoutCustomer(request):
     auth_logout(request)
     return JsonResponse({'message': 'Logout successful'}, status=200)
+
+@csrf_exempt
+def get_report_of_stations(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        start_date, end_date = validate_date_range(data)
+
+        waste_histories = WasteHistory.objects.filter(
+            recycling_date__gte=start_date,
+            recycling_date__lte=end_date
+        )
+
+        response = generate_waste_report_pdf(waste_histories, start_date, end_date)
+        return response
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format"}, status=400)
+    except ValueError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)

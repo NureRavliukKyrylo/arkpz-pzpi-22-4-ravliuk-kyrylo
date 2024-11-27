@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path,include
 from rest_framework_simplejwt.views import TokenRefreshView
-from backend_api.views import MineTokenObtainPairView,registerCustomer,loginCustomer, logoutCustomer
+from backend_api.views import MineTokenObtainPairView,registerCustomer,loginCustomer, logoutCustomer,get_report_of_stations
 
 
 urlpatterns = [
@@ -12,4 +12,6 @@ urlpatterns = [
     path('api/register', registerCustomer, name='register_user'),
     path('api/login', loginCustomer, name='login_user'),
     path('api/logout', logoutCustomer, name='logout_user'),
+    path('api/get_report',get_report_of_stations,name = "report")
+
 ]
