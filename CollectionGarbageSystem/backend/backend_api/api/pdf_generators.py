@@ -3,7 +3,7 @@ from reportlab.lib.pagesizes import letter
 from collections import defaultdict
 from django.http import HttpResponse
 import os
-from .charts import create_waste_trend_plot  
+from .charts import create_waste_trend_plot,calculate_statistics_for_containers,create_statistics_chart_for_containers  
 
 def generate_waste_report_pdf(waste_histories, start_date, end_date):
     if not waste_histories:
@@ -66,3 +66,55 @@ def generate_waste_report_pdf(waste_histories, start_date, end_date):
 
     pdf_canvas.save()
     return response
+
+def generate_waste_report_for_containers_pdf(waste_histories, start_date, end_date):
+    if not waste_histories:
+        return HttpResponse("No waste history data provided.", content_type="text/plain")
+
+    report_data = calculate_statistics_for_containers(waste_histories)
+
+    chart_img_path = create_statistics_chart_for_containers(report_data)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="waste_history_report.pdf"'
+
+    pdf_canvas = canvas.Canvas(response, pagesize=letter)
+    pdf_canvas.setFont("Times-Bold", 25)
+    pdf_canvas.drawString(180, 750, "Statistics Type Containers")
+    pdf_canvas.setFont("Times-Bold", 14)
+    pdf_canvas.drawString(50, 700, f"Period: {start_date} to {end_date}")
+
+    y = 660
+    pdf_canvas.drawString(50, y, "Material Type")
+    pdf_canvas.drawString(150, y, "Average Volume (liters)")
+    pdf_canvas.drawString(310, y, "Mode Volume (liters)")
+    pdf_canvas.drawString(455, y, "Min")
+    pdf_canvas.drawString(530, y, "Max")
+    y -= 20
+
+    for material, stats in sorted(report_data.items(), key=lambda x: -x[1]['average']):
+        pdf_canvas.drawString(50, y, str(material))
+        pdf_canvas.drawString(150, y, f"{stats['average']} liters")
+        pdf_canvas.drawString(310, y, f"{stats['mode']} liters")
+        pdf_canvas.drawString(455, y, f"{stats['min']} liters")
+        pdf_canvas.drawString(530, y, f"{stats['max']} liters")
+        y -= 20
+        if y < 50:
+            pdf_canvas.showPage()
+            pdf_canvas.setFont("Times-Bold", 12)
+            y = 750  
+
+    if y < 70:
+        pdf_canvas.showPage()
+        pdf_canvas.setFont("Times-Bold", 12)
+        y = 750  
+
+    pdf_canvas.drawString(50, y - 30, f"Total Materials: {len(report_data)}")
+    y -= 40
+
+    pdf_canvas.drawImage(chart_img_path, 50, y - 350, width=500, height=300)
+    os.remove(chart_img_path)
+
+    pdf_canvas.save()
+    return response
+

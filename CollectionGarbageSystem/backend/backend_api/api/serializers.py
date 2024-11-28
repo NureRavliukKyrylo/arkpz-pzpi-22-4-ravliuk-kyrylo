@@ -35,8 +35,9 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        token['is_admin'] = user.is_superuser
+
         return token
+
 
 class RoleUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -168,3 +169,31 @@ class WasteHistorySerializer(serializers.ModelSerializer):
         if value < now().date():
             raise serializers.ValidationError("The recycling date cannot be in the past.")
         return value
+
+class RegisterCustomerSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(write_only=True)
+    email = serializers.EmailField()
+
+    def validate(self, data):
+        if CustomUser.objects.filter(email=data['email']).exists():
+            raise serializers.ValidationError({"email": "Email is already in use."})
+        if CustomUser.objects.filter(username=data['username']).exists():
+            raise serializers.ValidationError({"username": "Username is already in use."})
+        return data
+
+    def create(self, validated_data):
+        user = CustomUser.objects.create_user(
+            username=validated_data['username'],
+            password=validated_data['password'],
+            email=validated_data['email']
+        )
+        return user
+
+class LoginCustomerSerializer(serializers.Serializer): 
+    username = serializers.CharField(max_length=150) 
+    password = serializers.CharField(write_only=True)
+
+class DateRangeSerializer(serializers.Serializer):
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()

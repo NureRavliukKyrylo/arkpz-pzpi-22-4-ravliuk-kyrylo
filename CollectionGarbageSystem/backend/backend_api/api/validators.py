@@ -1,4 +1,3 @@
-
 def validate_date_range(data):
     start_date = data.get('start_date')
     end_date = data.get('end_date')
