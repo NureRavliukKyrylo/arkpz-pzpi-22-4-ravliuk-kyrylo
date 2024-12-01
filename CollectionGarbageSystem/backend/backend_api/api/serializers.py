@@ -7,9 +7,10 @@ from backend_api.models import (
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.timezone import now
+from django.contrib.auth.hashers import check_password
 
 class CustomerSerializer(ModelSerializer):
-    password = serializers.CharField(required=True, style={'input_type': 'password'})
+    password = serializers.CharField(required=True, style={'input_type': 'password'}, write_only=True)
     
     class Meta:
         model = CustomUser
@@ -29,7 +30,7 @@ class CustomerSerializer(ModelSerializer):
         if password:
             instance.set_password(password)
         instance.save()
-        return instance
+        return super().update(instance, validated_data)
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -132,6 +133,7 @@ class TypeOfContainerSerializer(serializers.ModelSerializer):
 
 
 class ContainersSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = Containers
         fields = ['fill_level', 'status_container_id', 'last_updated', 'type_of_container_id', 'station_id']
@@ -197,3 +199,31 @@ class LoginCustomerSerializer(serializers.Serializer):
 class DateRangeSerializer(serializers.Serializer):
     start_date = serializers.DateField()
     end_date = serializers.DateField()
+
+class PasswordUpdateSerializer(serializers.Serializer):
+    last_password = serializers.CharField(
+        required=True,
+        write_only=True,
+        style={"input_type": "password"}
+    )
+    new_password = serializers.CharField(
+        required=True,
+        write_only=True,
+        style={"input_type": "password"}
+    )
+
+    def validate(self, data):
+        user = self.context['user']
+        if not check_password(data['last_password'], user.password):
+            raise serializers.ValidationError({"last_password": "Incorrect password."})
+        return data
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['new_password'])
+        instance.save()
+        return instance
+    
+class UpdateStationStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StationOfContainers
+        fields = ['status_station']

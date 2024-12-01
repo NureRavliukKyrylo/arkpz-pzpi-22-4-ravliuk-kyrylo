@@ -12,7 +12,7 @@ from backend_api.api.validators import validate_date_range
 from backend_api.api.pdf_generators import generate_waste_report_pdf,generate_waste_report_for_containers_pdf
 from django.http import JsonResponse
 from .models import IoTFillingContainer
-from backend_api.api.jwt_guard import get_user_from_jwt
+from backend_api.api.permissions import IsAdminAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -106,6 +106,7 @@ class LogoutCustomerView(APIView):
             return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
 
 class GetReportOfStationsView(APIView):
+    permission_classes = [IsAdminAuthenticated]
     @swagger_auto_schema(
         request_body=DateRangeSerializer,
         responses={
@@ -117,8 +118,6 @@ class GetReportOfStationsView(APIView):
     )
     def post(self, request):
         try:
-            user = get_user_from_jwt(request)
-            print(user)
             data = request.data
             start_date = data.get('start_date')
             end_date = data.get('end_date')
@@ -144,7 +143,7 @@ class GetReportOfStationsView(APIView):
 
     
 class GetReportOfStationsView(APIView):
-
+    permission_classes = [IsAdminAuthenticated]
     @swagger_auto_schema(
         request_body=DateRangeSerializer,
         responses={
@@ -157,9 +156,6 @@ class GetReportOfStationsView(APIView):
     def post(self, request):
 
         try:
-            user = get_user_from_jwt(request)
-            print(f"User: {user}")
-
             data = request.data
             start_date = data.get('start_date')
             end_date = data.get('end_date')
