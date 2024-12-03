@@ -45,6 +45,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username','password'] 
 
+    def save(self, *args, **kwargs):
+        if not self.role:
+            role_user, created = RoleUser.objects.get_or_create(
+                name="Customer"
+            )
+            self.role = role_user
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.email
 
@@ -166,3 +174,13 @@ class WasteHistory(models.Model):
             self.amount = round(total_fill_level, 2) 
         
         super().save(*args, **kwargs)
+
+class AdminLoggingChanges(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+    table_name = models.CharField(max_length=255)
+    action = models.CharField(max_length=50)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    values = models.JSONField(null=True, blank=True) 
+
+    def __str__(self):
+        return f"{self.user} - {self.table_name} - {self.action} - {self.timestamp}"

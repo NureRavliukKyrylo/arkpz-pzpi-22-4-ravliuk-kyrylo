@@ -227,3 +227,23 @@ class UpdateStationStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = StationOfContainers
         fields = ['status_station']
+
+class SensorValueUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IoTFillingContainer
+        fields = ['sensor_value']
+
+    def validate_sensor_value(self, value):
+        if value < 0: 
+            raise serializers.ValidationError("Sensor value must be a positive number.")
+        return value
+    
+class CollectionScheduleUpdateDateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CollectionSchedules
+        fields = ['collection_date']
+    
+    def validate_collection_date(self, value):
+        if value < now():
+            raise serializers.ValidationError("The collection date cannot be in the past.")
+        return value

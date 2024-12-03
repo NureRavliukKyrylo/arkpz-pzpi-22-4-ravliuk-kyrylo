@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path,include
 from rest_framework_simplejwt.views import TokenRefreshView
-from backend_api.views import MineTokenObtainPairView,RegisterCustomerView,LoginCustomerView, LogoutCustomerView, GetReportOfStationsView, GetReportOfStationsView
+from backend_api.views import MineTokenObtainPairView,RegisterCustomerView,LoginCustomerView, LogoutCustomerView, GetReportOfStationsView, GetReportOfContainersView,DownloadBackupView,RestoreBackupView
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -29,7 +29,9 @@ urlpatterns = [
     path('api/login', LoginCustomerView.as_view(), name='login_user'),
     path('api/logout', LogoutCustomerView.as_view(), name='logout_user'),
     path('api/get_report',GetReportOfStationsView.as_view(),name = "report"),
-    path('api/get_report_waste',GetReportOfStationsView.as_view(),name = "report"),
+    path('api/get_report_waste',GetReportOfContainersView.as_view(),name = "report"),
+    path('api/back-up',DownloadBackupView.as_view(),name = "back_up"),
+    path('api/restore-DB',RestoreBackupView.as_view(),name = "restore_db"),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui')
 
 ]

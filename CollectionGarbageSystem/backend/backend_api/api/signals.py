@@ -1,14 +1,28 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save,pre_delete
 from django.dispatch import receiver
 from django.utils.timezone import now
-from backend_api.models import IoTFillingContainer, CustomUser, NotificationsUser, NotificationTypes, StatusOfContainer, StationOfContainers,WasteHistory, CollectionSchedules,StationOfContainersStatus
+from backend_api.models import IoTFillingContainer, CustomUser, NotificationsUser, NotificationTypes, StatusOfContainer, StationOfContainers,WasteHistory, CollectionSchedules,StationOfContainersStatus,AdminLoggingChanges
 from django.db.models.signals import pre_save
-from django.dispatch import receiver
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
+from django.db.models import Model
+from ..middleware import get_current_request
+from rest_framework.exceptions import AuthenticationFailed
+import jwt
+import json
+from django.core.serializers.json import DjangoJSONEncoder
+import datetime
 
-@receiver(post_save, sender=IoTFillingContainer)
-def check_container_fill_level(sender, instance, created, **kwargs):
-    if created:
+@receiver(pre_save, sender=IoTFillingContainer)
+def check_container_fill_level(sender, instance, **kwargs):
+    if instance.pk:
+        previous_instance = IoTFillingContainer.objects.get(pk=instance.pk)
+        previous_sensor_value = previous_instance.sensor_value
+    else:
+        previous_sensor_value = None 
+
+    if previous_sensor_value != instance.sensor_value:
         container = instance.container_id_filling
         if container:
             if instance.sensor_value > 90:
@@ -26,10 +40,19 @@ def check_container_fill_level(sender, instance, created, **kwargs):
                             timestamp_get_notification=now(),
                             station_id=container.station_id
                         )
-            elif instance.sensor_value < 90:
+
+                        send_mail(
+                            subject="Action Required: Container Reservation",
+                            message=NotificationsUser.objects.filter(user_id = operator).latest('timestamp_get_notification').message,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            recipient_list=[operator.email],
+                            fail_silently=False,
+                        )
+            elif instance.sensor_value <= 90:
                 active_status, created = StatusOfContainer.objects.get_or_create(status_name="Active")
                 container.status_container_id = active_status
                 container.save()
+
 
 @receiver(pre_save, sender=StationOfContainers)
 def update_last_reserved_on_status_change(sender, instance, **kwargs):
@@ -63,4 +86,148 @@ def update_station_status_on_schedule(sender, instance, created, **kwargs):
         station = instance.station_of_containers_id
         station.status_station = get_reserving_status()
         station.save()
+
+@receiver(pre_save, sender=CollectionSchedules)
+def check_collection_date_update(sender, instance, **kwargs):
+    if instance.pk:
+        previous_instance = CollectionSchedules.objects.get(pk=instance.pk)
+        previous_collection_date = previous_instance.collection_date
+    else:
+        previous_collection_date = None 
+
+    if previous_collection_date != instance.collection_date:
+        station = instance.station_of_containers_id
+        if station:
+            customers = CustomUser.objects.filter(role__name="Customer")
+            operators = CustomUser.objects.filter(role__name="Operator")
+
+            if customers.exists():
+                for customer in customers:
+                    formatted_collection_date = instance.collection_date.strftime('%Y-%m-%d %H:%M')
+
+                    NotificationsUser.objects.create(
+                        user_id=customer,
+                        message=f"The collection date for station '{station.station_of_containers_name}' has been updated to {formatted_collection_date}.",
+                        notification_type=NotificationTypes.objects.get_or_create(type_notification_name="Schedule Update")[0],
+                        timestamp_get_notification=now(),
+                        station_id=station
+                    )
+
+                    send_mail(
+                        subject="Collection Date Updated for Station",
+                        message=NotificationsUser.objects.filter(user_id=customer).latest('timestamp_get_notification').message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[customer.email],
+                        fail_silently=False,
+                    )
+
+            if operators.exists():
+                for operator in operators:
+                    formatted_collection_date = instance.collection_date.strftime('%Y-%m-%d %H:%M')
+
+                    NotificationsUser.objects.create(
+                        user_id=operator,
+                        message=f"Operator notification: The collection date for station '{station.station_of_containers_name}' has been updated to {formatted_collection_date}.",
+                        notification_type=NotificationTypes.objects.get_or_create(type_notification_name="Schedule Update")[0],
+                        timestamp_get_notification=now(),
+                        station_id=station
+                    )
+
+                    send_mail(
+                        subject="Collection Date Updated for Station (Operator)",
+                        message=NotificationsUser.objects.filter(user_id=operator).latest('timestamp_get_notification').message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[operator.email],
+                        fail_silently=False,
+                    )
+
+from django.db import connection
+def serialize_instance(instance):
+
+    if instance is None:
+        return None
+
+    data = {}
+    for field in instance._meta.fields:
+        value = getattr(instance, field.name)
+
+        if isinstance(value, datetime.datetime):
+            data[field.name] = value.isoformat()  
+        elif isinstance(value, Model): 
+            data[field.name] = serialize_instance(value)
+        else:
+            data[field.name] = value
+    return data
+
+def log_change(user, table_name, action, values):
+    if AdminLoggingChanges._meta.db_table in connection.introspection.table_names():
+        for key, value in values.items():
+            if isinstance(value, Model):
+                values[key] = serialize_instance(value)
+            elif isinstance(value, datetime.datetime):
+                values[key] = value.isoformat()
+
+        json.dumps(values, cls=DjangoJSONEncoder) 
+
+        AdminLoggingChanges.objects.create(
+            user=user,
+            table_name=table_name,
+            action=action,
+            timestamp=timezone.now(),
+            values=values
+        )
+
+def get_user_from_token(request):
+    token = request.COOKIES.get('access_token')
+    if not token:
+        raise AuthenticationFailed('User is not authenticated. Token not found.')
+
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise AuthenticationFailed('Token has expired.')
+    except jwt.InvalidTokenError:
+        raise AuthenticationFailed('Invalid token.')
+
+    user_id = payload.get('user_id')
+    if not user_id:
+        raise AuthenticationFailed('User ID not found in the token.')
+
+    user = CustomUser.objects.filter(id=user_id).first()
+    if not user:
+        raise AuthenticationFailed('User not found.')
+
+    return user
+
+def get_user_from_request():
+    request = get_current_request()
+    if not request:
+        return None
+
+    try:
+        return get_user_from_token(request)
+    except AuthenticationFailed:
+        return None
+
+@receiver(post_save)
+def log_model_changes(sender, instance, created, **kwargs):
+        if sender == AdminLoggingChanges:
+            return
+
+        user = get_user_from_request()
+        action = 'CREATE' if created else 'UPDATE'
+
+        changes = {field.name: getattr(instance, field.name) for field in instance._meta.fields}
+        log_change(user, sender._meta.model_name, action, changes)
+
+@receiver(pre_delete)
+def log_model_deletion(sender, instance, **kwargs):
+    if sender == AdminLoggingChanges:
+        return
+
+    user = get_user_from_request()
+    action = 'DELETE'
+
+    changes = {field.name: getattr(instance, field.name) for field in instance._meta.fields}
+    log_change(user, sender._meta.model_name, action, changes)
 
