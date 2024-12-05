@@ -7,12 +7,11 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Model
-from ..middleware import get_current_request
-from rest_framework.exceptions import AuthenticationFailed
-import jwt
+from ..middleware import get_current_request,get_user
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 import datetime
+from django.db import connection
 
 @receiver(pre_save, sender=IoTFillingContainer)
 def check_container_fill_level(sender, instance, **kwargs):
@@ -141,9 +140,7 @@ def check_collection_date_update(sender, instance, **kwargs):
                         fail_silently=False,
                     )
 
-from django.db import connection
 def serialize_instance(instance):
-
     if instance is None:
         return None
 
@@ -177,44 +174,13 @@ def log_change(user, table_name, action, values):
             values=values
         )
 
-def get_user_from_token(request):
-    token = request.COOKIES.get('access_token')
-    if not token:
-        raise AuthenticationFailed('User is not authenticated. Token not found.')
-
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        raise AuthenticationFailed('Token has expired.')
-    except jwt.InvalidTokenError:
-        raise AuthenticationFailed('Invalid token.')
-
-    user_id = payload.get('user_id')
-    if not user_id:
-        raise AuthenticationFailed('User ID not found in the token.')
-
-    user = CustomUser.objects.filter(id=user_id).first()
-    if not user:
-        raise AuthenticationFailed('User not found.')
-
-    return user
-
-def get_user_from_request():
-    request = get_current_request()
-    if not request:
-        return None
-
-    try:
-        return get_user_from_token(request)
-    except AuthenticationFailed:
-        return None
-
 @receiver(post_save)
 def log_model_changes(sender, instance, created, **kwargs):
         if sender == AdminLoggingChanges:
             return
 
-        user = get_user_from_request()
+        current_request = get_current_request()
+        user = get_user(current_request)
         action = 'CREATE' if created else 'UPDATE'
 
         changes = {field.name: getattr(instance, field.name) for field in instance._meta.fields}
@@ -225,7 +191,8 @@ def log_model_deletion(sender, instance, **kwargs):
     if sender == AdminLoggingChanges:
         return
 
-    user = get_user_from_request()
+    current_request = get_current_request()
+    user = get_user(current_request)
     action = 'DELETE'
 
     changes = {field.name: getattr(instance, field.name) for field in instance._meta.fields}

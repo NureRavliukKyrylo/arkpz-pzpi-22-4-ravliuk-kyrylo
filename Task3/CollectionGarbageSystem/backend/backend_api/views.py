@@ -20,7 +20,6 @@ from drf_yasg import openapi
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import AuthenticationFailed
-from django.apps import apps
 from rest_framework.parsers import MultiPartParser
 from django.db import transaction
 from django.db.utils import IntegrityError
@@ -34,6 +33,7 @@ from django.db.models.signals import pre_save, post_save
 from django.db.models.signals import pre_delete, post_delete
 from contextlib import contextmanager
 from django.db import connection
+from datetime import datetime
 
 class RegisterCustomerView(APIView):
     @swagger_auto_schema(
@@ -199,7 +199,6 @@ class GetReportOfContainersView(APIView):
         except Exception as e:
             return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
 
-from datetime import datetime
 def custom_json_serializer(obj):
     if isinstance(obj, datetime):
         return obj.isoformat()  
