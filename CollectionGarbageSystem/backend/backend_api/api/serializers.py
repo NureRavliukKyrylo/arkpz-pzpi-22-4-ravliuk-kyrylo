@@ -3,11 +3,15 @@ from rest_framework import serializers
 from backend_api.models import (
     CustomUser, RoleUser, StationOfContainers, StationOfContainersStatus, 
     CollectionSchedules, NotificationTypes, NotificationsUser, StatusOfContainer, 
-    TypeOfContainer, Containers, IoTFillingContainer, WasteHistory
+    TypeOfContainer, Containers, IoTFillingContainer, WasteHistory,AdminLoggingChanges
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.timezone import now
 from django.contrib.auth.hashers import check_password
+from .validators import (
+    validate_only_letters, validate_latitude, validate_longitude, 
+    validate_positive, validate_collection_date, validate_sensor_value,validate_amount_history
+)
 
 class CustomerSerializer(ModelSerializer):
     password = serializers.CharField(required=True, style={'input_type': 'password'}, write_only=True)
@@ -46,9 +50,7 @@ class RoleUserSerializer(serializers.ModelSerializer):
         fields = ['name']
 
     def validate_name(self, value):
-        if not value.isalpha():
-            raise serializers.ValidationError('The field may only contain letters.')
-        return value
+        return validate_only_letters(value)
 
 
 class StationOfContainersStatusSerializer(serializers.ModelSerializer):
@@ -56,10 +58,8 @@ class StationOfContainersStatusSerializer(serializers.ModelSerializer):
         model = StationOfContainersStatus
         fields = ['station_status_name']
 
-    def validate_name(self, value):
-        if not value.isalpha():
-            raise serializers.ValidationError('The field may only contain letters.')
-        return value
+    def validate_station_status_name(self, value):
+        return validate_only_letters(value)
 
 class StationOfContainersSerializer(serializers.ModelSerializer):  
     class Meta:
@@ -67,15 +67,10 @@ class StationOfContainersSerializer(serializers.ModelSerializer):
         fields = ['station_of_containers_name', 'latitude_location', 'longitude_location', 'status_station', 'last_reserved']
     
     def validate_latitude_location(self, value):
-        if not (-90 <= value <= 90):
-            raise serializers.ValidationError("Latitude must be between -90 and 90.")
-        return value
+        return validate_latitude(value)
     
     def validate_longitude_location(self, value):
-        if not (-180 <= value <= 180):
-            raise serializers.ValidationError("Longitude must be between -180 and 180.")
-        return value
-
+        return validate_longitude(value)
 
 class CollectionSchedulesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -83,9 +78,8 @@ class CollectionSchedulesSerializer(serializers.ModelSerializer):
         fields = ['station_of_containers_id', 'collection_date']
 
     def validate_collection_date(self, value):
-        if value < now():
-            raise serializers.ValidationError("The collection date cannot be in the past.")
-        return value
+        return validate_collection_date(value)
+    
     
 
 class NotificationTypesSerializer(serializers.ModelSerializer):
@@ -94,9 +88,7 @@ class NotificationTypesSerializer(serializers.ModelSerializer):
         fields = ['type_notification_name']
 
     def validate_name(self, value):
-        if not value.isalpha():
-            raise serializers.ValidationError('The field may only contain letters.')
-        return value
+        return validate_only_letters(value)
 
 
 class NotificationsUserSerializer(serializers.ModelSerializer):
@@ -110,10 +102,8 @@ class StatusOfContainerSerializer(serializers.ModelSerializer):
         model = StatusOfContainer
         fields = ['status_name']
     
-    def validate_name(self, value):
-        if not value.isalpha():
-            raise serializers.ValidationError('The field may only contain letters.')
-        return value
+    def validate_status_name(self, value):
+        return validate_only_letters(value)
 
 
 class TypeOfContainerSerializer(serializers.ModelSerializer):
@@ -122,18 +112,13 @@ class TypeOfContainerSerializer(serializers.ModelSerializer):
         fields = ['type_name_container', 'volume_container']
     
     def validate_volume_container(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("The container volume must be greater than 0.")
-        return value
+        return validate_positive(value)
     
-    def validate_name(self, value):
-        if not value.isalpha():
-            raise serializers.ValidationError('The field may only contain letters.')
-        return value
-
+    def validate_type_name_container(self, value):
+        return validate_only_letters(value)
+    
 
 class ContainersSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = Containers
         fields = ['fill_level', 'status_container_id', 'last_updated', 'type_of_container_id', 'station_id']
@@ -145,16 +130,7 @@ class IoTFillingContainerSerializer(serializers.ModelSerializer):
         fields = ['container_id_filling', 'sensor_value', 'time_of_detect']
 
     def validate_sensor_value(self, value):
-        if value > 100:
-            raise serializers.ValidationError("The 'sensor_value' cannot exceed 100.")
-        if value <= 0:
-            raise serializers.ValidationError("The 'sensor_value' cannot be negative.")
-        return value
-    
-    def validate_container_id_filling(self, value):
-        if not Containers.objects.filter(id=value.id).exists():
-            raise serializers.ValidationError("A container with this ID does not exist.")
-        return value
+        return validate_sensor_value(value)
 
 
 class WasteHistorySerializer(serializers.ModelSerializer):
@@ -163,14 +139,10 @@ class WasteHistorySerializer(serializers.ModelSerializer):
         fields = ['amount', 'station_id', 'recycling_date']
 
     def validate_amount(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("The amount of waste must be greater than 0.")
-        return value
+        return validate_amount_history(value)
 
     def validate_recycling_date(self, value):
-        if value < now().date():
-            raise serializers.ValidationError("The recycling date cannot be in the past.")
-        return value
+        return validate_collection_date(value)
 
 class RegisterCustomerSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
@@ -227,6 +199,7 @@ class UpdateStationStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = StationOfContainers
         fields = ['status_station']
+        
 
 class SensorValueUpdateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -234,9 +207,7 @@ class SensorValueUpdateSerializer(serializers.ModelSerializer):
         fields = ['sensor_value']
 
     def validate_sensor_value(self, value):
-        if value < 0: 
-            raise serializers.ValidationError("Sensor value must be a positive number.")
-        return value
+        return validate_sensor_value(value)
     
 class CollectionScheduleUpdateDateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -244,6 +215,14 @@ class CollectionScheduleUpdateDateSerializer(serializers.ModelSerializer):
         fields = ['collection_date']
     
     def validate_collection_date(self, value):
-        if value < now():
-            raise serializers.ValidationError("The collection date cannot be in the past.")
-        return value
+        return validate_collection_date(value)
+
+class CustomerUpdateSerializer(ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email', 'is_active', 'is_staff', 'role', 'date_joined']
+
+class AdminLoggingChangesSerializer(ModelSerializer):
+    class Meta:
+        model = AdminLoggingChanges
+        fields = ['user','table_name','action','timestamp','values']

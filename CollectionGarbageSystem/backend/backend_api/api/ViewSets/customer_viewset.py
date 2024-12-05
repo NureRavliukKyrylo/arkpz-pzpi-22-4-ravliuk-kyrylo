@@ -2,7 +2,7 @@ from backend_api.api.ViewSets.base_viewset import GenericViewSet
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from backend_api.api.permissions import IsAdminAuthenticated,IsUserAuthenticated
-from ..serializers import CustomerSerializer,PasswordUpdateSerializer
+from ..serializers import CustomerSerializer,PasswordUpdateSerializer,CustomerUpdateSerializer
 from ...models import CustomUser
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -34,7 +34,7 @@ class CustomerViewSet(GenericViewSet):
     
     @swagger_auto_schema(
     operation_description="Update a customer without modifying the password",
-    request_body=CustomerSerializer,
+    request_body=CustomerUpdateSerializer,
     responses={200: CustomerSerializer}
     )
     def update(self, request, pk=None):
@@ -46,7 +46,7 @@ class CustomerViewSet(GenericViewSet):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except self.queryset.model.DoesNotExist:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": f"A Customer with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
     
     @action(detail=True, methods=['patch'], url_path='change-password')
     @swagger_auto_schema(
@@ -66,4 +66,4 @@ class CustomerViewSet(GenericViewSet):
                 return Response({"detail": "Password updated successfully"}, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except self.queryset.model.DoesNotExist:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": f"A Customer with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)

@@ -41,4 +41,4 @@ class RoleUserViewSet(GenericViewSet):
                 return Response(serializer.data)
             return Response(self.format_error(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
         except self.queryset.model.DoesNotExist:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": f"A Role with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)

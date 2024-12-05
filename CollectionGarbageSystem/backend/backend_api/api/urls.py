@@ -11,6 +11,7 @@ from backend_api.api.ViewSets.type_container_viewset import TypeOfContainerViewS
 from backend_api.api.ViewSets.containers_viewset import ContainersViewSet
 from backend_api.api.ViewSets.IoT_filling_viewset import IoTFillingContainerViewSet
 from backend_api.api.ViewSets.histories_viewset import WasteHistoryViewSet
+from backend_api.api.ViewSets.logging_changes_viewset import AdminLoggingChangesViewSet
 
 ROUTE_VIEWSET_MAPPING = {
     'customers': CustomerViewSet,
@@ -25,6 +26,7 @@ ROUTE_VIEWSET_MAPPING = {
     'containers': ContainersViewSet,
     'iotFillingContainers': IoTFillingContainerViewSet,
     'wasteHistories': WasteHistoryViewSet,
+    'logging':AdminLoggingChangesViewSet
 }
 
 router = DefaultRouter()

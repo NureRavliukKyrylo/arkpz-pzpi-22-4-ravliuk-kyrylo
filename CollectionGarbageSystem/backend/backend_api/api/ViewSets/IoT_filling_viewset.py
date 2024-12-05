@@ -54,7 +54,7 @@ class IoTFillingContainerViewSet(GenericViewSet):
         try:
             instance = self.queryset.get(pk=pk)
         except IoTFillingContainer.DoesNotExist:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": f"A Filling sensor with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = SensorValueUpdateSerializer(instance, data=request.data, partial=True)
 

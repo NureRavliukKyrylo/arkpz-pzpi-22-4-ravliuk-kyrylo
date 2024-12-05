@@ -79,7 +79,7 @@ class ContainersViewSet(GenericViewSet):
                 return Response(serializer.data)
             return Response(self.format_error(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
         except self.queryset.model.DoesNotExist:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": f"A Container with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
     
     @action(detail=True, methods=['patch'], url_path='update-status')
     @swagger_auto_schema(
@@ -106,7 +106,7 @@ class ContainersViewSet(GenericViewSet):
             
             return Response(self.serializer_class(instance).data, status=status.HTTP_200_OK)
         except Containers.DoesNotExist:
-            return Response({"error": "Container not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": f"A Container with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=True, methods=['patch'], url_path='update-type')
     @swagger_auto_schema(
@@ -133,6 +133,6 @@ class ContainersViewSet(GenericViewSet):
 
             return Response(self.serializer_class(instance).data, status=status.HTTP_200_OK)
         except Containers.DoesNotExist:
-            return Response({"error": "Container not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": f"A Container with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
     
     

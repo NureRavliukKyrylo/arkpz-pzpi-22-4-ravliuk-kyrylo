@@ -83,13 +83,16 @@ class StationOfContainersViewSet(GenericViewSet):
         try:
             instance = self.queryset.get(pk=pk)
             serializer = UpdateStationStatusSerializer(instance, data=request.data, partial=True)
+            
             if serializer.is_valid():
                 serializer.save()
                 return Response(StationOfContainersSerializer(instance).data, status=status.HTTP_200_OK)
+            
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
         except StationOfContainers.DoesNotExist:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-    
+            return Response({"error": f"A Station with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        
     @swagger_auto_schema(
         operation_description="Update a Station",
         request_body=StationOfContainersSerializer,
@@ -104,4 +107,4 @@ class StationOfContainersViewSet(GenericViewSet):
                 return Response(serializer.data)
             return Response(self.format_error(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
         except self.queryset.model.DoesNotExist:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": f"A Station with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
