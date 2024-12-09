@@ -15,7 +15,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework import status
-import json
+
 class RegisterCustomerView(APIView):
     @swagger_auto_schema(
         request_body=RegisterCustomerSerializer,

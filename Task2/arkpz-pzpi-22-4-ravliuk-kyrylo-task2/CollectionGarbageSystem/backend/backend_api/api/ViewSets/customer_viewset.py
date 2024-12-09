@@ -2,11 +2,12 @@ from backend_api.api.ViewSets.base_viewset import GenericViewSet
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from backend_api.api.permissions import IsAdminAuthenticated,IsUserAuthenticated
-from ..serializers import CustomerSerializer,PasswordUpdateSerializer,CustomerUpdateSerializer
+from ..serializers import CustomerSerializer,PasswordUpdateSerializer,CustomerUpdateSerializer,UpdateRoleSerializer
 from ...models import CustomUser
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
+from rest_framework.decorators import permission_classes
 
 class CustomerViewSet(GenericViewSet):
 
@@ -67,3 +68,25 @@ class CustomerViewSet(GenericViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except self.queryset.model.DoesNotExist:
             return Response({"error": f"A Customer with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+    
+    @action(detail=True, methods=['patch'], url_path='update-role')
+    @swagger_auto_schema(
+        operation_description="Change Role for a customer",
+        request_body=UpdateRoleSerializer,
+        responses={200: "Role updated successfully", 400: "Invalid input"}
+    )
+    @permission_classes([IsAdminAuthenticated])
+    def update_role(self, request, pk=None):
+        try:
+            instance = self.queryset.get(pk=pk)
+            user_role= request.data.get('role')
+
+            if not user_role:
+                return Response({"error": "Missing 'role' in request data"}, status=status.HTTP_400_BAD_REQUEST)
+
+            instance.role_id= user_role
+            instance.save()
+            
+            return Response(self.serializer_class(instance).data, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response({"error": f"A User with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)

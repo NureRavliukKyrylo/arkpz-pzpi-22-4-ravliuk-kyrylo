@@ -1,0 +1,809 @@
+Харківський університет радіоелектроніки Факультет комп'ютерних наук
+Кафедра програмної інженерії
+
+
+
+
+
+
+ЗВІТ
+
+з лабораторного заняття №2 
+з дисципліни  «Аналіз та рефакторинг коду»
+на тему: «РОЗРОБКА БАЗИ ДАНИХ ДЛЯ СЕРВЕРНОЇ ЧАСТИНИ ПРОГРАМНОЇ СИСТЕМИ ТА ПРИКЛАДНОГО ПРОГРАМНОГО ІНТЕРФЕЙСУ (API).»
+
+
+
+
+Виконав ст. гр ПЗПІ-22-4
+
+Равлюк Кирило Станіславович
+
+
+
+Перевірив
+
+ст. викладач кафедри ПІ Сокорчук Ігор Петрович
+
+
+
+
+Харків 2024
+
+МЕТА РОБОТИ
+
+	Метою цього лабораторного заняття є розробка бази даних для серверної частини та прикладного програмного інтерфейсу програмної системи, що забезпечує моніторинг і управління процесом збору та переробки відходів.
+
+ХІД РОБОТИ
+
+1.	Розробка будови програмної системи
+Програмна система для контролю здачі та переробки сміття складається з кількох основних компонентів, що забезпечують її ефективну роботу. IoT-сенсори встановлюються на сміттєвих контейнерах для збору даних про їх заповненість у реальному часі. Ці дані передаються на сервер через мережу Wi-Fi, де обробляються та зберігаються в базі даних. Серверна частина системи реалізована з використанням API REST, що дозволяє клієнтським додаткам взаємодіяти з базою даних, отримуючи актуальну інформацію про стан контейнерів, графіки збору сміття та інші дані.
+База даних системи забезпечує зберігання інформації про контейнери, історію вимірювань з IoT-сенсорів, користувачів та їхні ролі, а також статистичних даних для подальшого аналізу. 
+
+2.	Створити UML діаграму прецедентів для серверної частини системи
+На рисунку 1.1 представлено UML-діаграму прецедентів для акторів «Оператор» та «Користувач».
+ 
+Рисунок 1.1 - UML-діаграма прецедентів для користувача та оператора.
+
+На рисунку 1.2 представлено UML-діаграму прецедентів для акторів «Адміністратор».
+ 
+Рисунок 1.2 - UML-діаграма прецедентів для адміністратора.
+
+На рисунку 1.3 представлено UML-діаграму прецедентів для акторів "Системний адміністратор".
+ 
+Рисунок 1.3 - UML-діаграма прецедентів для системного адміністратора.
+
+3.	Створити ER діаграму даних.
+
+ 
+Рисунок 1.4 - ER-діаграма бази даних програмної системи.
+
+
+
+
+4.	Розробити базу даних (БД) програмної системи.
+Розробка бази даних (БД) програмної системи здійснювалась з урахуванням основних вимог до зберігання даних про користувачів, сміттєві контейнери, станції переробки та процеси збору і переробки відходів. База даних містить такі ключові сутності: Users, що зберігають інформацію про користувачів із прив’язкою до їхніх ролей через таблицю Roles, Containers, які відображають стан сміттєвих контейнерів, їхній обсяг та рівень заповнення, із посиланням на станції Recycling_Station.
+Дані з IoT-сенсорів передаються в таблицю IoT_FillingContainer, яка фіксує показники заповненості контейнерів у реальному часі. Для управління станом контейнерів використовується таблиця Container_Statuses, а тип контейнерів визначається через Container_Type.
+Система також враховує історію переробки у таблиці Waste_History, графіки збору відходів у Collection_Schedules, та статуси переробки через Recycling_Status. Модуль сповіщень реалізовано через таблиці Notifications та Notification_Types, які забезпечують інформування користувачів про важливі події. Додатково зміни користувачів вносяться в слідкування через таблицю AdminLoggingChanges.
+База даних була реалізована за допомогою PostgreSQL, що забезпечило стабільність, продуктивність і масштабованість системи.
+
+5.	Розробити функції роботи з БД (ORM або CoRM тощо)
+Для роботи з базою даних у програмній системі було використано Django ORM, яке забезпечує ефективну взаємодію з PostgreSQL. 
+Було створено моделі для ключових сутностей, таких як користувачі, ролі, станції контейнерів, контейнери, IoT-дані, сповіщення та історія переробки. Завдяки використанню ForeignKey встановлено зв’язки між таблицями, наприклад, між контейнерами та станціями, або користувачами та їхніми ролями. 
+У моделях реалізовано бізнес-логіку, яка автоматизує заповнення полів за замовчуванням: наприклад, стан контейнерів або станції автоматично встановлюється як "Active", якщо його не вказано вручну.
+
+Для контейнерів передбачено динамічний розрахунок рівня заповнення через властивість fill_level, яка базується на останніх даних із сенсорів, отриманих через модель IoTFillingContainer. Крім цього, модель WasteHistory дозволяє автоматично обчислювати загальний обсяг заповненості всіх контейнерів на станції, що забезпечує актуальну інформацію про переробку. Логування змін адміністраторів реалізовано через модель AdminLoggingChanges, яка фіксує інформацію про модифіковані таблиці, типи виконаних операцій та значення змін у форматі JSON. 
+Для забезпечення коректності даних у моделях використовується метод full_clean, який перевіряє дані перед їх збереженням у базу. Для зберігання даних відповідних типів у моделях застосовуються поля FloatField, DateTimeField , CharField і т.д .
+
+6.	Розробити API (REST або GraphQL, gRPC тощо) для взаємодії серверної частини з клієнтами.
+Для взаємодії серверної частини з клієнтами було розроблено API, що використовує архітектуру REST та реалізовано за допомогою Django REST Framework (DRF). 
+API надає доступ до таких ресурсів, як користувачі (для реєстрації, аутентифікації та управління профілями), контейнери (для отримання інформації про статус контейнерів, рівень заповнення та типи), станції переробки (для отримання даних про розташування, прийняті матеріали та статуси станцій), графіки збору (для отримання даних про заплановані збори відходів), сповіщення (для надсилання повідомлень користувачам про події) і т.д.
+ Реалізовано основні HTTP-методи: GET для отримання даних, POST для створення нових ресурсів, PUT/PATCH для оновлення інформації та DELETE для видалення. 
+Для захищеного доступу до API впроваджена аутентифікація через JWT-токени. Крім того, було реалізовано обмеження доступу на основі ролей користувачів (адміністратор, системний адміністратор, оператор, звичайний користувач).
+
+
+7.	Створити специфікацію розробленого API.
+Для взаємодії з серверною частиною було реалізовано ендпойнти, що підтримують операції CRUD для кожної моделі в системі та функції для автентифікації та реєстрації користувача. Це дозволяє здійснювати створення, читання, оновлення та видалення даних для користувачів, контейнерів, станцій переробки, графіків збору відходів та сповіщень. Основні ендпойнти API включають управління користувачами, отримання інформації про контейнери та станції переробки та роботу з графіками збору відходів.
+Документація API була створена у форматі OpenAPI 3.1 за допомогою бібліотеки drf_yasg для Django REST Framework. Вона описує всі ендпойнти, методи, формати запитів і відповідей, а також приклади використання. Для кожного ендпойнту вказані типи даних, зокрема JSON-структури з валідацією полів, а також стандартизовані відповіді з полями статусу, помилок та даних. 
+Документація автоматично генерується і надається через інтерактивний інтерфейс Swagger UI , що забезпечує зручний доступ до специфікації для розробників.
+
+8.	Створити програмну реалізацію розробленого API та функцій роботи з базою даних.
+Програмна реалізація розробленого API була виконана за допомогою Django REST Framework (DRF), що забезпечує швидку і зручну інтеграцію серверної частини з базою даних та клієнтськими додатками. Основна мета реалізації полягала у створенні ендпойнтів для CRUD-операцій, які взаємодіють з моделями бази даних, забезпечуючи управління користувачами, контейнерами, станціями переробки, графіками збору відходів і т.д.
+Для кожної моделі було реалізовано відповідні серіалізатори, що дозволяють перетворювати дані між моделями Django та JSON-форматом для передачі через API. 
+API було побудовано з використанням стандартних HTTP-методів (GET, POST, PUT/PATCH, DELETE) для кожного ресурсу. Для забезпечення захисту і безпеки доступу було впроваджено аутентифікацію через JWT-токени, що гарантує захищений доступ до API для авторизованих користувачів.
+Для роботи з базою даних використано Django ORM, яке автоматично створює SQL-запити на створення таблиць та забезпечує зручну взаємодію з ними. Функції для роботи з базою даних включають запити для отримання даних про контейнери, станції, графіки збору і т.д , а також логіку для оновлення статусів і заповнення полів при створенні нових записів.
+
+ВИСНОВКИ
+
+У процесі виконання роботи розроблено концепцію програмної системи, яка забезпечує моніторинг і управління процесами збору та переробки відходів. Основна увага була зосереджена на визначенні ключових компонентів системи, їх функціональних можливостей та взаємодії, що дозволило створити чітку архітектуру програмного продукту. Для відображення взаємодії користувачів із системою побудовано UML-діаграму прецедентів, яка демонструє сценарії використання серверної частини.
+На основі аналізу вимог було створено ER-діаграму даних, яка відображає логічну структуру бази даних, і побудовано її фізичну структуру для ефективного управління інформацією. В процесі реалізації бази даних використано сучасні методики, зокрема ORM, що спрощує інтеграцію з серверною частиною системи.
+Для забезпечення взаємодії клієнтських додатків із сервером розроблено API, що базується на  архітектурі REST. У рамках цього етапу створено специфікацію API, яка детально описує запити та відповіді.
+Фінальним етапом роботи стала програмна реалізація функцій роботи з базою даних та API, інтеграція цих компонентів із серверною частиною і тестування створеного коду. Тестування дозволило перевірити коректність реалізації функцій, стабільність роботи системи та відповідність вимогам. Результатом роботи стала функціональна серверна частина системи, готова до подальшої інтеграції з клієнтськими додатками та розгортання в робочому середовищі.
+Було створено відеозапис: https://youtu.be/2l-u5xI22pw
+
+
+
+ДОДАТОК А
+Функції роботи з БД ORM
+
+     1  from django.db import models
+     2  from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+     3
+     4  class RoleUser(models.Model):
+     5      name = models.CharField(max_length=255, unique=True)
+     6
+     7      def __str__(self):
+     8          return self.name
+     9
+    10
+    11  class CustomUserManager(BaseUserManager):
+    12      def create_user(self, email, password=None, **extra_fields):
+    13          if not email:
+    14              raise ValueError("The Email field must be set")
+    15          email = self.normalize_email(email)
+    16          user = self.model(email=email, **extra_fields)
+    17          user.set_password(password)
+    18          user.save(using=self._db)
+    19          return user
+    20
+    21      def create_superuser(self, email, password=None, **extra_fields):
+    22          extra_fields.setdefault('is_staff', True)
+    23          extra_fields.setdefault('is_superuser', True)
+    24
+    25          if extra_fields.get('is_staff') is not True:
+    26              raise ValueError('Superuser must have is_staff=True.')
+    27          if extra_fields.get('is_superuser') is not True:
+    28              raise ValueError('Superuser must have is_superuser=True.')
+    29
+    30          return self.create_user(email, password, **extra_fields)
+    31
+    32  class CustomUser(AbstractBaseUser, PermissionsMixin):
+    33      username = models.CharField(max_length=150, unique=True, null=True, blank=True)
+    34      email = models.EmailField(unique=True)
+    35      is_active = models.BooleanField(default=True)
+    36      is_staff = models.BooleanField(default=False)
+    37      role = models.ForeignKey(RoleUser, on_delete=models.SET_NULL, null=True, blank=True)
+    38
+    39      date_joined = models.DateTimeField(auto_now_add=True)
+    40
+    41      objects = CustomUserManager()
+    42
+    43      USERNAME_FIELD = 'email'
+    44      REQUIRED_FIELDS = ['username','password']
+    45
+    46      def save(self, *args, **kwargs):
+    47          if not self.role:
+    48              role_user, created = RoleUser.objects.get_or_create(
+    49                  name="Customer"
+    50              )
+    51              self.role = role_user
+    52          super().save(*args, **kwargs)
+    53
+    54      def __str__(self):
+    55          return self.email
+    56
+    57
+    58  class StationOfContainersStatus(models.Model):
+    59      station_status_name = models.CharField(max_length=100)
+    60
+    61      def __str__(self):
+    62          return self.station_status_name
+    63
+    64  class StationOfContainers(models.Model):
+    65      station_of_containers_name = models.CharField(max_length=100, unique=True)
+    66      latitude_location = models.FloatField()
+    67      longitude_location = models.FloatField()
+    68      status_station = models.ForeignKey(StationOfContainersStatus, on_delete=models.SET_NULL, null=True, blank=True)
+    69      last_reserved = models.DateTimeField(auto_now_add=True)
+    70
+    71      def save(self, *args, **kwargs):
+    72          if not self.status_station:
+    73              active_status, created = StationOfContainersStatus.objects.get_or_create(
+    74                  station_status_name="Active"
+    75              )
+    76              self.status_station = active_status
+    77          super().save(*args, **kwargs)
+    78
+    79      def __str__(self):
+    80          return self.station_of_containers_name
+    81
+    82  class CollectionSchedules(models.Model):
+    83      station_of_containers_id = models.ForeignKey(StationOfContainers, on_delete=models.SET_NULL, null=True, blank=True)
+    84      collection_date = models.DateTimeField(unique=True)
+    85
+    86      def save(self, *args, **kwargs):
+    87          self.full_clean()
+    88          super().save(*args, **kwargs)
+    89
+    90      def __str__(self):
+    91          return self.station_of_containers_id
+    92
+    93  class NotificationTypes(models.Model):
+    94      type_notification_name = models.CharField(max_length=50, unique=True)
+    95
+    96      def __str__(self):
+    97          return self.type_notification_name
+    98
+    99  class NotificationsUser(models.Model):
+   100      user_id = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+   101      message = models.CharField(max_length=150)
+   102      notification_type = models.ForeignKey(NotificationTypes, on_delete=models.SET_NULL, null=True, blank=True)
+   103      timestamp_get_notification = models.DateTimeField(unique=True)
+   104      station_id = models.ForeignKey(StationOfContainers, on_delete=models.SET_NULL, null=True, blank=True)
+   105
+   106      def __str__(self):
+   107          return self.user_id
+   108
+   109  class StatusOfContainer(models.Model):
+   110      status_name = models.CharField(max_length=150, unique=True)
+   111
+   112      def __str__(self):
+   113          return self.status_name
+   114
+   115  class TypeOfContainer(models.Model):
+   116      type_name_container = models.CharField(max_length=150, unique=True)
+   117      volume_container = models.FloatField()
+   118
+   119      def __str__(self):
+   120          return self.type_name_container
+   121
+   122  class Containers(models.Model):
+   123      status_container_id = models.ForeignKey(StatusOfContainer, on_delete=models.SET_NULL, null=True, blank=True)
+   124      last_updated = models.DateTimeField(auto_now=True)
+   125      type_of_container_id = models.ForeignKey(TypeOfContainer, on_delete=models.SET_NULL, null=True, blank=True)
+   126      station_id = models.ForeignKey(StationOfContainers, on_delete=models.SET_NULL, null=True, blank=True)
+   127
+   128      @property
+   129      def fill_level(self):
+   130          latest_filling = IoTFillingContainer.objects.filter(container_id_filling=self).order_by('-time_of_detect').first()
+   131          if not latest_filling or not self.type_of_container_id:
+   132              return 0
+   133          return round((latest_filling.sensor_value / 100) * self.type_of_container_id.volume_container,2)
+   134
+   135      def save(self, *args, **kwargs):
+   136          if not self.status_container_id:
+   137              active_container_status, created = StatusOfContainer.objects.get_or_create(status_name="Active")
+   138              self.status_container_id = active_container_status
+   139          super().save(*args, **kwargs)
+   140
+   141      def __str__(self):
+   142          return str(self.id)
+   143
+   144  class IoTFillingContainer(models.Model):
+   145      container_id_filling = models.ForeignKey('Containers', on_delete=models.SET_NULL, null=True, blank=True)
+   146      sensor_value = models.FloatField()
+   147      time_of_detect = models.DateTimeField(auto_now_add=True)
+   148
+   149      def save(self, *args, **kwargs):
+   150          self.full_clean()
+   151          super().save(*args, **kwargs)
+   152
+   153      def __str__(self):
+   154          return f"Container with fill level: {self.sensor_value:.2f}"
+   155
+   156  class WasteHistory(models.Model):
+   157      amount = models.FloatField()
+   158      station_id = models.ForeignKey(StationOfContainers, on_delete=models.SET_NULL, null=True, blank=True)
+   159      recycling_date = models.DateTimeField(unique=True)
+   160
+   161      def __str__(self):
+   162          return str(self.recycling_date)
+   163
+   164      def save(self, *args, **kwargs):
+   165          if self.station_id:
+   166              containers = Containers.objects.filter(station_id=self.station_id)
+   167
+   168              total_fill_level = 0
+   169              for container in containers:
+   170                  total_fill_level += container.fill_level
+   171
+   172              self.amount = round(total_fill_level, 2)
+   173
+   174          super().save(*args, **kwargs)
+   175
+   176  class AdminLoggingChanges(models.Model):
+   177      user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+   178      table_name = models.CharField(max_length=255)
+   179      action = models.CharField(max_length=50)
+   180      timestamp = models.DateTimeField(auto_now_add=True)
+   181      values = models.JSONField(null=True, blank=True)
+   182
+   183      def __str__(self):
+   184          return f"{self.user} - {self.table_name} - {self.action} - {self.timestamp}"
+ 
+ДОДАТОК Б
+Програмний код основного API
+Auth API:
+     1  from django.http import JsonResponse
+     2  from django.contrib.auth import login as auth_login, logout as auth_logout
+     3  from rest_framework_simplejwt.tokens import RefreshToken
+     4  from rest_framework_simplejwt.views import TokenObtainPairView
+     5  from backend_api.api.serializers import MyTokenObtainPairSerializer,RegisterCustomerSerializer,LoginCustomerSerializer,DateRangeSerializer
+     6  from .models import CustomUser
+     7  from django.contrib.auth.hashers import check_password
+     8  from django.http import JsonResponse
+     9  from rest_framework.views import APIView
+    10  from rest_framework.response import Response
+    11  from rest_framework import status
+    12  from drf_yasg.utils import swagger_auto_schema
+    13  from drf_yasg import openapi
+    14  from rest_framework.exceptions import AuthenticationFailed
+    15  from django.http import JsonResponse
+    16  from rest_framework.views import APIView
+    17  from rest_framework import status
+    18
+    19  class RegisterCustomerView(APIView):
+    20      @swagger_auto_schema(
+    21          request_body=RegisterCustomerSerializer,
+    22          responses={
+    23              201: 'User registered successfully',
+    24              400: 'Invalid input',
+    25          }
+    26      )
+    27      def post(self, request):
+    28          serializer = RegisterCustomerSerializer(data=request.data)
+    29          if serializer.is_valid():
+    30              serializer.save()
+    31              return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
+    32          return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    33
+    34  class LoginCustomerView(APIView):
+    35      @swagger_auto_schema(
+    36          request_body=LoginCustomerSerializer,
+    37          responses={
+    38              200: 'Login successful',
+    39              400: 'Invalid login credentials',
+    40              500: 'An error occurred',
+    41          }
+    42      )
+    43      def post(self, request):
+    44          serializer = LoginCustomerSerializer(data=request.data)
+    45          if serializer.is_valid():
+    46              username = serializer.validated_data['username']
+    47              password = serializer.validated_data['password']
+    48
+    49              try:
+    50                  user = CustomUser.objects.get(username=username)
+    51
+    52                  if not check_password(password, user.password):
+    53                      raise AuthenticationFailed('Invalid login credentials')
+    54
+    55                  refresh = RefreshToken.for_user(user)
+    56                  access_token = str(refresh.access_token)
+    57                  refresh_token = str(refresh)
+    58
+    59                  response = Response({
+    60                      'message': 'Login successful',
+    61                  }, status=200)
+    62
+    63                  response.set_cookie('access_token', access_token, httponly=True, secure=True, max_age=3600, path='/')
+    64                  response.set_cookie('refresh_token', refresh_token, httponly=True, secure=True, max_age=86400, path='/')
+    65
+    66                  return response
+    67              except CustomUser.DoesNotExist:
+    68                  raise AuthenticationFailed('Invalid login credentials')
+    69          return Response(serializer.errors, status=400)
+    70
+    71
+    72  class MineTokenObtainPairView(TokenObtainPairView):
+    73      serializer_class = MyTokenObtainPairSerializer
+    74
+    75  class LogoutCustomerView(APIView):
+    76
+    77      @swagger_auto_schema(
+    78              operation_description="Logs out the user by deleting the access and refresh tokens from the cookies.",
+    79              responses={
+    80                  200: openapi.Response(
+    81                      description="Logout successful",
+    82                      schema=openapi.Schema(type=openapi.TYPE_OBJECT, properties={
+    83                          'message': openapi.Schema(type=openapi.TYPE_STRING, example='Logout successful')
+    84                      })
+    85                  ),
+    86                  403: 'Permission denied - User must be authenticated.',
+    87                  500: 'Unexpected error occurred'
+    88              }
+    89          )
+    90      def post(self, request):
+    91          try:
+    92              response = JsonResponse({'message': 'Logout successful'}, status=200)
+    93
+    94              response.delete_cookie('access_token', path='/')
+    95              response.delete_cookie('refresh_token', path='/')
+    96
+    97              return response
+    98
+    99          except Exception as e:
+   100              return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
+
+Customers ViewSet API:
+     1  from backend_api.api.ViewSets.base_viewset import GenericViewSet
+     2  from rest_framework.response import Response
+     3  from drf_yasg.utils import swagger_auto_schema
+     4  from backend_api.api.permissions import IsAdminAuthenticated,IsUserAuthenticated
+     5  from ..serializers import CustomerSerializer,PasswordUpdateSerializer,CustomerUpdateSerializer,UpdateRoleSerializer
+     6  from ...models import CustomUser
+     7  from rest_framework.response import Response
+     8  from rest_framework.decorators import action
+     9  from rest_framework import status
+    10  from rest_framework.decorators import permission_classes
+    11
+    12  class CustomerViewSet(GenericViewSet):
+    13
+    14      queryset = CustomUser.objects.all()
+    15      serializer_class = CustomerSerializer
+    16
+    17      def get_permissions(self):
+    18          if self.action == 'partial_update':
+    19              permission_classes = [IsUserAuthenticated]
+    20          else:
+    21              permission_classes = [IsAdminAuthenticated]
+    22          return [permission() for permission in permission_classes]
+    23
+    24      @swagger_auto_schema(
+    25          operation_description="Create a new customer",
+    26          request_body=CustomerSerializer,
+    27          responses={201: CustomerSerializer}
+    28      )
+    29      def create(self, request):
+    30          serializer = self.serializer_class(data=request.data)
+    31          if serializer.is_valid():
+    32              serializer.save()
+    33              return Response(serializer.data, status=status.HTTP_201_CREATED)
+    34          return Response(self.format_error(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
+    35
+    36      @swagger_auto_schema(
+    37      operation_description="Update a customer without modifying the password",
+    38      request_body=CustomerUpdateSerializer,
+    39      responses={200: CustomerSerializer}
+    40      )
+    41      def update(self, request, pk=None):
+    42          try:
+    43              instance = self.queryset.get(pk=pk)
+    44              serializer = self.serializer_class(instance, data=request.data, partial=True)
+    45              if serializer.is_valid():
+    46                  serializer.save()
+    47                  return Response(serializer.data, status=status.HTTP_200_OK)
+    48              return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    49          except self.queryset.model.DoesNotExist:
+    50              return Response({"error": f"A Customer with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+    51
+    52      @action(detail=True, methods=['patch'], url_path='change-password')
+    53      @swagger_auto_schema(
+    54          operation_description="Change password for a customer",
+    55          request_body=PasswordUpdateSerializer,
+    56          responses={200: "Password updated successfully", 400: "Invalid input"}
+    57      )
+    58      def change_password(self, request, pk=None):
+    59          try:
+    60              instance = self.queryset.get(pk=pk)
+    61              serializer = PasswordUpdateSerializer(
+    62                  data=request.data,
+    63                  context={'user': instance}
+    64              )
+    65              if serializer.is_valid():
+    66                  serializer.update(instance, serializer.validated_data)
+    67                  return Response({"detail": "Password updated successfully"}, status=status.HTTP_200_OK)
+    68              return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    69          except self.queryset.model.DoesNotExist:
+    70              return Response({"error": f"A Customer with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+    71
+    72      @action(detail=True, methods=['patch'], url_path='update-role')
+    73      @swagger_auto_schema(
+    74          operation_description="Change Role for a customer",
+    75          request_body=UpdateRoleSerializer,
+    76          responses={200: "Role updated successfully", 400: "Invalid input"}
+    77      )
+    78      @permission_classes([IsAdminAuthenticated])
+    79      def update_role(self, request, pk=None):
+    80          try:
+    81              instance = self.queryset.get(pk=pk)
+    82              user_role= request.data.get('role')
+    83
+    84              if not user_role:
+    85                  return Response({"error": "Missing 'role' in request data"}, status=status.HTTP_400_BAD_REQUEST)
+    86
+    87              instance.role_id= user_role
+    88              instance.save()
+    89
+    90              return Response(self.serializer_class(instance).data, status=status.HTTP_200_OK)
+    91          except CustomUser.DoesNotExist:
+    92              return Response({"error": f"A User with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+Containers ViewSet API:
+     1  from backend_api.api.ViewSets.base_viewset import GenericViewSet
+     2  from rest_framework.response import Response
+     3  from rest_framework.decorators import action
+     4  from drf_yasg.utils import swagger_auto_schema
+     5  from backend_api.api.permissions import IsAdminAuthenticated,IsAdminOrOperatorAuthenticated
+     6  from ..serializers import ContainersSerializer
+     7  from ...models import Containers
+     8  from rest_framework.response import Response
+     9  from rest_framework import status
+    10  from django_filters.rest_framework import DjangoFilterBackend
+    11  from drf_yasg import openapi
+    12
+    13  class ContainersViewSet(GenericViewSet):
+    14      queryset = Containers.objects.all()
+    15      serializer_class = ContainersSerializer
+    16      filter_backends = [DjangoFilterBackend]
+    17      filterset_fields = ['status_container_id__status_name', 'type_of_container_id__type_name_container']
+    18
+    19      def get_permissions(self):
+    20          if self.action == 'list' or self.action == 'retrieve':
+    21              permission_classes = [IsAdminOrOperatorAuthenticated]
+    22          else:
+    23              permission_classes = [IsAdminAuthenticated]
+    24          return [permission() for permission in permission_classes]
+    25
+    26      @swagger_auto_schema(
+    27          operation_description="Create a new Container",
+    28          request_body=ContainersSerializer,
+    29          responses={201: ContainersSerializer}
+    30      )
+    31      def create(self, request):
+    32          serializer = self.serializer_class(data=request.data)
+    33          if serializer.is_valid():
+    34              serializer.save()
+    35              return Response(serializer.data, status=status.HTTP_201_CREATED)
+    36          return Response(self.format_error(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
+    37
+    38      @swagger_auto_schema(
+    39          operation_description="List all Containers with filtering options",
+    40          manual_parameters=[
+    41              openapi.Parameter(
+    42                  'status_container_id__status_name',
+    43                  openapi.IN_QUERY,
+    44                  description="Filter containers by status name (e.g., 'Active')",
+    45                  type=openapi.TYPE_STRING
+    46              ),
+    47              openapi.Parameter(
+    48                  'type_of_container_id__type_name_container',
+    49                  openapi.IN_QUERY,
+    50                  description="Filter containers by type name (e.g., 'Plastic')",
+    51                  type=openapi.TYPE_STRING
+    52              )
+    53          ],
+    54          responses={200: ContainersSerializer(many=True)}
+    55      )
+    56      def list(self, request):
+    57          queryset = self.queryset
+    58
+    59          queryset = self.apply_filters(request, queryset)
+    60
+    61          serializer = self.serializer_class(queryset, many=True)
+    62          return Response(serializer.data)
+    63
+    64      def apply_filters(self, request, queryset):
+    65          filter_backend = DjangoFilterBackend()
+    66          return filter_backend.filter_queryset(request, queryset, self)
+    67
+    68      @swagger_auto_schema(
+    69          operation_description="Update container",
+    70          request_body=ContainersSerializer,
+    71          responses={201: ContainersSerializer}
+    72      )
+    73      def update(self, request, pk=None):
+    74          try:
+    75              instance = self.queryset.get(pk=pk)
+    76              serializer = self.serializer_class(instance, data=request.data)
+    77              if serializer.is_valid():
+    78                  serializer.save()
+    79                  return Response(serializer.data)
+    80              return Response(self.format_error(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
+    81          except self.queryset.model.DoesNotExist:
+    82              return Response({"error": f"A Container with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+    83
+    84      @action(detail=True, methods=['patch'], url_path='update-status')
+    85      @swagger_auto_schema(
+    86          operation_description="Partially update the status of a container",
+    87          request_body=openapi.Schema(
+    88              type=openapi.TYPE_OBJECT,
+    89              properties={
+    90                  'status_container_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the new status")
+    91              },
+    92              required=['status_container_id']
+    93          ),
+    94          responses={200: ContainersSerializer}
+    95      )
+    96      def partial_update_status(self, request, pk=None):
+    97          try:
+    98              instance = self.queryset.get(pk=pk)
+    99              new_status_id = request.data.get('status_container_id')
+   100
+   101              if not new_status_id:
+   102                  return Response({"error": "Missing 'status_container_id' in request data"}, status=status.HTTP_400_BAD_REQUEST)
+   103
+   104              instance.status_container_id_id = new_status_id  # Update the FK directly
+   105              instance.save()
+   106
+   107              return Response(self.serializer_class(instance).data, status=status.HTTP_200_OK)
+   108          except Containers.DoesNotExist:
+   109              return Response({"error": f"A Container with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+   110
+   111      @action(detail=True, methods=['patch'], url_path='update-type')
+   112      @swagger_auto_schema(
+   113          operation_description="Partially update the type of a container",
+   114          request_body=openapi.Schema(
+   115              type=openapi.TYPE_OBJECT,
+   116              properties={
+   117                  'type_of_container_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the new type")
+   118              },
+   119              required=['type_of_container_id']
+   120          ),
+   121          responses={200: ContainersSerializer}
+   122      )
+   123      def partial_update_type(self, request, pk=None):
+   124          try:
+   125              instance = self.queryset.get(pk=pk)
+   126              new_type_id = request.data.get('type_of_container_id')
+   127
+   128              if not new_type_id:
+   129                  return Response({"error": "Missing 'type_of_container_id' in request data"}, status=status.HTTP_400_BAD_REQUEST)
+   130
+   131              instance.type_of_container_id_id = new_type_id
+   132              instance.save()
+   133
+   134              return Response(self.serializer_class(instance).data, status=status.HTTP_200_OK)
+   135          except Containers.DoesNotExist:
+   136              return Response({"error": f"A Container with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+Stations ViewSet API:
+     1  from backend_api.api.ViewSets.base_viewset import GenericViewSet
+     2  from rest_framework.response import Response
+     3  from rest_framework.decorators import action
+     4  from drf_yasg.utils import swagger_auto_schema
+     5  from backend_api.api.permissions import IsAdminAuthenticated,IsAdminOrOperatorOrUserAuthenticated
+     6  from ..serializers import StationOfContainersSerializer,UpdateStationStatusSerializer
+     7  from ...models import StationOfContainers
+     8  from rest_framework.response import Response
+     9  from rest_framework import status
+    10  from rest_framework.filters import SearchFilter
+    11  from django_filters.rest_framework import DjangoFilterBackend
+    12  from drf_yasg import openapi
+    13
+    14  class StationOfContainersViewSet(GenericViewSet):
+    15      queryset = StationOfContainers.objects.all()
+    16      serializer_class = StationOfContainersSerializer
+    17      filter_backends = [DjangoFilterBackend, SearchFilter]
+    18      filterset_fields = ['status_station__station_status_name']
+    19      search_fields = ['station_of_containers_name']
+    20
+    21      def get_permissions(self):
+    22          if self.action == 'list' or self.action == 'retrieve':
+    23              permission_classes = [IsAdminOrOperatorOrUserAuthenticated]
+    24          else:
+    25              permission_classes = [IsAdminAuthenticated]
+    26          return [permission() for permission in permission_classes]
+    27
+    28      @swagger_auto_schema(
+    29          operation_description="Create a new Station",
+    30          request_body=StationOfContainersSerializer,
+    31          responses={201: StationOfContainersSerializer}
+    32      )
+    33      def create(self, request):
+    34          serializer = self.serializer_class(data=request.data)
+    35          if serializer.is_valid():
+    36              serializer.save()
+    37              return Response(serializer.data, status=status.HTTP_201_CREATED)
+    38          return Response(self.format_error(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
+    39
+    40      @swagger_auto_schema(
+    41          operation_description="List all Stations with filtering and search options",
+    42          manual_parameters=[
+    43              openapi.Parameter(
+    44                  'status_station__station_status_name',
+    45                  openapi.IN_QUERY,
+    46                  description="Filter stations by status name (e.g., 'Active')",
+    47                  type=openapi.TYPE_STRING
+    48              ),
+    49              openapi.Parameter(
+    50                  'search',
+    51                  openapi.IN_QUERY,
+    52                  description="Search stations by name",
+    53                  type=openapi.TYPE_STRING
+    54              )
+    55          ],
+    56          responses={200: StationOfContainersSerializer(many=True)}
+    57      )
+    58      def list(self, request):
+    59          queryset = self.queryset
+    60
+    61          queryset = self.apply_filters(request, queryset)
+    62
+    63          queryset = self.apply_search(request, queryset)
+    64
+    65          serializer = self.serializer_class(queryset, many=True)
+    66          return Response(serializer.data)
+    67
+    68      def apply_filters(self, request, queryset):
+    69          filter_backend = DjangoFilterBackend()
+    70          return filter_backend.filter_queryset(request, queryset, self)
+    71
+    72      def apply_search(self, request, queryset):
+    73          search_backend = SearchFilter()
+    74          return search_backend.filter_queryset(request, queryset, self)
+    75
+    76      @action(detail=True, methods=['patch'],url_path='update-status')
+    77      @swagger_auto_schema(
+    78          operation_description="Partially update the status_station field of a station",
+    79          request_body=UpdateStationStatusSerializer,
+    80          responses={200: StationOfContainersSerializer}
+    81      )
+    82      def update_status(self, request, pk=None):
+    83          try:
+    84              instance = self.queryset.get(pk=pk)
+    85              serializer = UpdateStationStatusSerializer(instance, data=request.data, partial=True)
+    86
+    87              if serializer.is_valid():
+    88                  serializer.save()
+    89                  return Response(StationOfContainersSerializer(instance).data, status=status.HTTP_200_OK)
+    90
+    91              return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    92
+    93          except StationOfContainers.DoesNotExist:
+    94              return Response({"error": f"A Station with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+    95
+    96      @swagger_auto_schema(
+    97          operation_description="Update a Station",
+    98          request_body=StationOfContainersSerializer,
+    99          responses={201: StationOfContainersSerializer}
+   100      )
+   101      def update(self, request, pk=None):
+   102          try:
+   103              instance = self.queryset.get(pk=pk)
+   104              serializer = self.serializer_class(instance, data=request.data)
+   105              if serializer.is_valid():
+   106                  serializer.save()
+   107                  return Response(serializer.data)
+   108              return Response(self.format_error(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
+   109          except self.queryset.model.DoesNotExist:
+   110              return Response({"error": f"A Station with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+IoT filling ViewSet API:
+     1  from backend_api.api.ViewSets.base_viewset import GenericViewSet
+     2  from rest_framework.response import Response
+     3  from drf_yasg.utils import swagger_auto_schema
+     4  from backend_api.api.permissions import IsAdminAuthenticated
+     5  from ..serializers import IoTFillingContainerSerializer,SensorValueUpdateSerializer
+     6  from ...models import IoTFillingContainer
+     7  from rest_framework.response import Response
+     8  from rest_framework import status
+     9  from rest_framework.decorators import action
+    10
+    11  class IoTFillingContainerViewSet(GenericViewSet):
+    12      queryset = IoTFillingContainer.objects.all()
+    13      serializer_class = IoTFillingContainerSerializer
+    14
+    15      def get_permissions(self):
+    16          permission_classes = [IsAdminAuthenticated]
+    17          return [permission() for permission in permission_classes]
+    18
+    19      @swagger_auto_schema(
+    20          operation_description="Create a new Filling level",
+    21          request_body=IoTFillingContainerSerializer,
+    22          responses={201: IoTFillingContainerSerializer}
+    23      )
+    24      def create(self, request):
+    25          serializer = self.serializer_class(data=request.data)
+    26          if serializer.is_valid():
+    27              serializer.save()
+    28              return Response(serializer.data, status=status.HTTP_201_CREATED)
+    29          return Response(self.format_error(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
+    30
+    31      @swagger_auto_schema(
+    32          operation_description="Update a new Filling level",
+    33          request_body=IoTFillingContainerSerializer,
+    34          responses={201: IoTFillingContainerSerializer}
+    35      )
+    36      def update(self, request, pk=None):
+    37          try:
+    38              instance = self.queryset.get(pk=pk)
+    39              serializer = self.serializer_class(instance, data=request.data)
+    40              if serializer.is_valid():
+    41                  serializer.save()
+    42                  return Response(serializer.data)
+    43              return Response(self.format_error(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
+    44          except self.queryset.model.DoesNotExist:
+    45              return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)\
+    46
+    47      @action(detail=True, methods=['patch'], url_path='partial-update')
+    48      @swagger_auto_schema(
+    49          operation_description="Update sensor value of a filling container (partial update, only 'sensor_value' field allowed)",
+    50          request_body=SensorValueUpdateSerializer,
+    51          responses={200: IoTFillingContainerSerializer}
+    52      )
+    53      def sensor_value_change(self, request, pk=None):
+    54          try:
+    55              instance = self.queryset.get(pk=pk)
+    56          except IoTFillingContainer.DoesNotExist:
+    57              return Response({"error": f"A Filling sensor with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+    58
+    59          serializer = SensorValueUpdateSerializer(instance, data=request.data, partial=True)
+    60
+    61          if serializer.is_valid():
+    62              serializer.save()
+    63              return Response(IoTFillingContainerSerializer(instance).data, status=status.HTTP_200_OK)
+    64
+    65          return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

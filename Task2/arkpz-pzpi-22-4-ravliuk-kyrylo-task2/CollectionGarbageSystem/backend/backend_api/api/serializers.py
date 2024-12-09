@@ -17,7 +17,7 @@ class CustomerSerializer(ModelSerializer):
     
     class Meta:
         model = CustomUser
-        fields = ['password', 'username', 'email', 'is_active', 'is_staff', 'role', 'date_joined']
+        fields = ['password', 'username', 'email', 'role', 'date_joined']
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -219,9 +219,14 @@ class CollectionScheduleUpdateDateSerializer(serializers.ModelSerializer):
 class CustomerUpdateSerializer(ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'is_active', 'is_staff', 'role', 'date_joined']
+        fields = ['username', 'email']
 
 class AdminLoggingChangesSerializer(ModelSerializer):
     class Meta:
         model = AdminLoggingChanges
         fields = ['user','table_name','action','timestamp','values']
+
+class UpdateRoleSerializer(ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['role']
