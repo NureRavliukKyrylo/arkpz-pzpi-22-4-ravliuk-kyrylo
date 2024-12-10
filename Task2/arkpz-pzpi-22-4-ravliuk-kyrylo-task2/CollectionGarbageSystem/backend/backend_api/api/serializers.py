@@ -79,7 +79,6 @@ class CollectionSchedulesSerializer(serializers.ModelSerializer):
     def validate_collection_date(self, value):
         return validate_collection_date(value)
     
-    
 
 class NotificationTypesSerializer(serializers.ModelSerializer):
     class Meta:
