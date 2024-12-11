@@ -44,7 +44,7 @@ class IoTFillingContainerViewSet(GenericViewSet):
         except self.queryset.model.DoesNotExist:
             return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)\
     
-    @action(detail=True, methods=['patch'], url_path='partial-update')
+    @action(detail=True, methods=['patch'], url_path='sensor-value-update')
     @swagger_auto_schema(
         operation_description="Update sensor value of a filling container (partial update, only 'sensor_value' field allowed)",
         request_body=SensorValueUpdateSerializer,

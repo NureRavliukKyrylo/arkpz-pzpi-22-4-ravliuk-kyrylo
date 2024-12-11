@@ -166,6 +166,7 @@ cython_debug/
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+.vscode
 
 # Django #
 *.log
