@@ -3,9 +3,26 @@ from reportlab.lib.pagesizes import letter
 from collections import defaultdict
 from django.http import HttpResponse
 import os
-from .charts import create_waste_trend_plot,calculate_statistics_for_containers,create_statistics_chart_for_containers  
+from .charts import create_waste_trend_plot,calculate_statistics_for_containers,create_statistics_chart_for_containers
+from datetime import timedelta
+import numpy as np
 
-def generate_waste_report_pdf(waste_histories, start_date, end_date):
+def polynomial_regression_forecast(dates, amounts, future_days, degree=2):
+    
+    days = [(date - dates[0]).days for date in dates]
+
+    coefficients = np.polyfit(days, amounts, degree)
+    poly = np.poly1d(coefficients)
+
+    future_predictions = []
+    for i in range(1, future_days + 1):
+        future_day = days[-1] + i
+        predicted_amount = poly(future_day)
+        future_predictions.append((dates[-1] + timedelta(days=i), predicted_amount))
+
+    return future_predictions
+
+def generate_waste_report_pdf(waste_histories, start_date, end_date, future_days=7):
     if not waste_histories:
         return HttpResponse("No waste history data provided.", content_type="text/plain")
 
@@ -54,7 +71,9 @@ def generate_waste_report_pdf(waste_histories, start_date, end_date):
 
     dates = sorted(waste_by_date.keys())
     amounts = [waste_by_date[date] for date in dates]
-    img_path = create_waste_trend_plot(dates, amounts)
+    predictions = polynomial_regression_forecast(dates, amounts, future_days)
+
+    img_path = create_waste_trend_plot(dates, amounts, predictions)
 
     if y < 350:
         pdf_canvas.showPage()

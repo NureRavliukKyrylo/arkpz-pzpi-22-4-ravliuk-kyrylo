@@ -5,13 +5,18 @@ import tempfile
 from statistics import median, mode
 from collections import defaultdict
 
-def create_waste_trend_plot(dates, amounts):
+def create_waste_trend_plot(dates, amounts, predictions=None):
     plt.figure(figsize=(6, 4))
     plt.plot(dates, amounts, marker='o', color='b', linestyle='-', label='Waste Amount')
+
+    if predictions:
+        pred_dates, pred_amounts = zip(*predictions)
+        plt.plot(pred_dates, pred_amounts, marker='x', color='r', linestyle='--', label='Forecast')
+
     plt.xlabel('Date')
     plt.ylabel('Amount of Waste')
     plt.title('Waste Trends Over Time')
-    plt.legend(loc="upper left")
+    plt.legend(loc="upper right")
     plt.grid(visible=True)
     plt.xticks(rotation=45)
     plt.tight_layout()

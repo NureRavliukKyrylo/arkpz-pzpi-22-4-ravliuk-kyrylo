@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.urls import path,include
 from rest_framework_simplejwt.views import TokenRefreshView
-from backend_api.views import MineTokenObtainPairView,RegisterCustomerView,LoginCustomerView, LogoutCustomerView, GetReportOfStationsView, GetReportOfContainersView,DownloadBackupView,RestoreBackupView
+from backend_api.api.Views.auth_views import MineTokenObtainPairView,RegisterCustomerView,LoginCustomerView, LogoutCustomerView
+from backend_api.api.Views.report_views import GetReportOfStationsView,GetReportOfContainersView
+from backend_api.api.Views.db_managment_views import DownloadBackupView,RestoreBackupView
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
