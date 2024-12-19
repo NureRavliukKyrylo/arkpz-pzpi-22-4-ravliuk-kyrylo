@@ -25,7 +25,7 @@ SECRET_KEY = ' '
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['rnlmj-91-146-250-0.a.free.pinggy.link','rnhjt-91-146-250-0.a.free.pinggy.link']
+ALLOWED_HOSTS = ['rnlpd-91-146-250-0.a.free.pinggy.link']
 
 CORS_ALLOW_CREDENTIALS = True
 

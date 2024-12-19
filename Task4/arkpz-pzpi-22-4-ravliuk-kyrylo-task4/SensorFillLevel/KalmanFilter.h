@@ -1,6 +1,7 @@
 #ifndef KALMAN_FILTER_H
 #define KALMAN_FILTER_H
 
+// Class implementing a simple 1D Kalman Filter for signal smoothing and noise reduction.
 class KalmanFilter {
 private:
     float processNoise = 0.022;            
@@ -11,6 +12,9 @@ private:
 public:
     KalmanFilter() {}
 
+    // Applies the Kalman filter algorithm to a new measurement.
+    // measurement: The new measurement to be filtered.
+    // Returns: The updated state estimate after filtering.
     float filter(float measurement) {
         float predictedState = stateEstimate; 
         float predictedErrorCovariance = errorCovariance + processNoise;

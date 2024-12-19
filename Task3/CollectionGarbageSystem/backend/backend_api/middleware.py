@@ -14,6 +14,9 @@ def get_current_request():
 
 # Function to extract the user from the token in the request
 def get_user_from_token(request):
+    if request is None:
+        raise AuthenticationFailed('No request object available.')
+
     token = request.COOKIES.get('access_token')  
     if not token:
         raise AuthenticationFailed('User is not authenticated. Token not found.')
@@ -37,6 +40,9 @@ def get_user_from_token(request):
 
 # Function to get the user from the request, caching the result for subsequent access
 def get_user(request):
+    if not request:
+        return None
+    
     if not hasattr(request, '_cached_user'):
         try:
             request._cached_user = get_user_from_token(request)
