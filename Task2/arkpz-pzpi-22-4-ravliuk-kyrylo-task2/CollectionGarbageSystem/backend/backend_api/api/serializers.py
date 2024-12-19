@@ -12,6 +12,7 @@ from .validators import (
     validate_positive, validate_collection_date, validate_sensor_value,validate_amount_history
 )
 
+# Serializers for converting model instances to JSON and validating incoming data.
 class CustomerSerializer(ModelSerializer):
     password = serializers.CharField(required=True, style={'input_type': 'password'}, write_only=True)
     

@@ -1,7 +1,9 @@
 #include "WiFiSetup.h"
 #include "DataServer.h"
+#include "KalmanFilter.h"
 
-const int SENSOR_ID = 11;
+const int CONTAINER_ID = 1;
+KalmanFilter kalmanFilter;
 
 void setup() {
     Serial.begin(9600);
@@ -9,9 +11,11 @@ void setup() {
 }
 
 void loop() {
-    float fillLevel = random(10, 100);
+    float rawDistance = random(10, 100);
+    float filteredDistance = kalmanFilter.filter(rawDistance);
+    float fillLevel = (100 - filteredDistance) / 100 * 100;
 
-    sendToServer(SENSOR_ID, fillLevel);
+    sendToServer(CONTAINER_ID, fillLevel);
 
-    delay(60000); 
+    delay(6000); 
 }

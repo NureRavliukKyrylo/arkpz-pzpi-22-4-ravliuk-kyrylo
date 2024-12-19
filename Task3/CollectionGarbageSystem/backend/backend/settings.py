@@ -25,8 +25,9 @@ SECRET_KEY = ' '
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['rnlmj-91-146-250-0.a.free.pinggy.link','rnhjt-91-146-250-0.a.free.pinggy.link']
 
+CORS_ALLOW_CREDENTIALS = True
 
 # Application definition
 
@@ -52,7 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'backend_api.middleware.RequestMiddleware'
+    'backend_api.middleware.RequestMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -82,8 +83,8 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': '',
-        'USER': '',
+        'NAME': 'postgres',
+        'USER': 'postgres',
         'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '5432',

@@ -16,11 +16,13 @@ from contextlib import contextmanager
 from django.db import connection
 from datetime import datetime
 
+# Custom JSON serializer to handle datetime objects
 def custom_json_serializer(obj):
     if isinstance(obj, datetime):
         return obj.isoformat()  
     raise TypeError(f"Type {type(obj)} not serializable")
 
+# View to download a backup of specified models' data
 class DownloadBackupView(APIView):
     @swagger_auto_schema(
         operation_summary="Download database backup",
@@ -56,7 +58,7 @@ class DownloadBackupView(APIView):
         }
     )
     def post(self, request, *args, **kwargs):
-        models_to_load = [  
+        models_to_load = [  # List of models to back up
             "backend_api.roleuser",
             "backend_api.StationOfContainersStatus",
             "backend_api.NotificationTypes",
@@ -75,6 +77,7 @@ class DownloadBackupView(APIView):
         try:
             backup_data = {}
 
+            # Loop over models and retrieve their data
             for model_path in models_to_load:
                 if "." not in model_path:
                     backup_data[model_path] = "Invalid model format. Expected '<app_label>.<model_name>'."
@@ -87,7 +90,8 @@ class DownloadBackupView(APIView):
                     backup_data[model_path] = model_data
                 except LookupError:
                     backup_data[model_path] = f"Model {model_path} not found."
-
+            
+             # Check if backup data is available
             if not any(isinstance(v, list) and v for v in backup_data.values()):
                 return Response({"message": "No data available for backup."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -100,6 +104,7 @@ class DownloadBackupView(APIView):
         except Exception as e:
             return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
 
+# Context manager to temporarily disable database signals
 @contextmanager
 def disable_all_signals():
     signals_to_disconnect = [pre_save, post_save, pre_delete, post_delete]
@@ -115,6 +120,7 @@ def disable_all_signals():
         for signal, receivers in disconnected_signals.items():
             signal.receivers.extend(receivers)
 
+# View to restore data from a JSON backup file
 class RestoreBackupView(APIView):
     parser_classes = [MultiPartParser]
 
@@ -163,11 +169,11 @@ class RestoreBackupView(APIView):
             return JsonResponse({"error": "No file provided."}, status=400)
 
         try:
-            backup_data = json.load(file)
+            backup_data = json.load(file)  # Load backup data from file
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
 
-        with disable_all_signals():
+        with disable_all_signals(): # Disable signals to prevent unintended side effects
             try:
                 errors = []
                 for model_path, records in backup_data.items():
@@ -186,7 +192,7 @@ class RestoreBackupView(APIView):
                         for record in records:
                             try:
                                 obj, created = model.objects.update_or_create(
-                                    id=record.get("id"), defaults=record
+                                    id=record.get("id"), defaults=record    # Restore or update record
                                 )
                             except IntegrityError as e:
                                 errors.append(
@@ -208,6 +214,7 @@ class RestoreBackupView(APIView):
         table_name = model._meta.db_table
         pk_name = model._meta.pk.column
 
+        # Update the sequence for auto-increment fields
         with connection.cursor() as cursor:
             cursor.execute(f"SELECT MAX({pk_name}) FROM {table_name}")
             max_id = cursor.fetchone()[0] or 0

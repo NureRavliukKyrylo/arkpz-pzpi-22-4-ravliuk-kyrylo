@@ -10,6 +10,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.exceptions import PermissionDenied
 
 class GetReportOfStationsView(APIView):
+    # Define permission classes, only admin users can access this view
     permission_classes = [IsAdminAuthenticated]
     @swagger_auto_schema(
         request_body=DateRangeSerializer,
@@ -22,18 +23,21 @@ class GetReportOfStationsView(APIView):
     )
     def post(self, request):
         try:
+            # Extract data from the request body
             data = request.data
             start_date = data.get('start_date')
             end_date = data.get('end_date')
             if not start_date or not end_date:
                 return JsonResponse({"error": "Both start_date and end_date are required."}, status=400)
 
+            # Filter the WasteHistory objects based on the provided date range
             waste_histories = WasteHistory.objects.filter(
                 recycling_date__gte=start_date,
                 recycling_date__lte=end_date,
                 station_id__isnull=False
             )
 
+             # Generate the PDF report for waste histories
             response = generate_waste_report_pdf(waste_histories, start_date, end_date)
             return response
 
@@ -48,6 +52,7 @@ class GetReportOfStationsView(APIView):
 
     
 class GetReportOfContainersView(APIView):
+     # Define permission classes, only admin users can access this view
     permission_classes = [IsAdminAuthenticated]
     @swagger_auto_schema(
         request_body=DateRangeSerializer,
@@ -59,7 +64,7 @@ class GetReportOfContainersView(APIView):
         }
     )
     def post(self, request):
-
+         # Extract data from the request body
         try:
             data = request.data
             start_date = data.get('start_date')
@@ -70,11 +75,13 @@ class GetReportOfContainersView(APIView):
 
             start_date, end_date = validate_date_range({'start_date': start_date, 'end_date': end_date})
 
+            # Filter the IoTFillingContainer objects based on the provided date range
             waste_histories = IoTFillingContainer.objects.filter(
                 time_of_detect__gte=start_date,
                 time_of_detect__lte=end_date
             ).select_related('container_id_filling__type_of_container_id')
 
+            # If data is found, generate the PDF report for containers
             if waste_histories.exists():
                 response = generate_waste_report_for_containers_pdf(waste_histories, start_date, end_date)
                 return response

@@ -1,35 +1,44 @@
 #include "DataServer.h"
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 
-const String API_SERVER_BASE_URL = "http://127.0.0.1:8000";
+const String API_SERVER_BASE_URL = "http://rnlmj-91-146-250-0.a.free.pinggy.link/api/iotFillingContainers/";
 
-void sendToServer(int sensorId, float fillLevel) {
-    if (WiFi.status() == WL_CONNECTED) {
-        HTTPClient http;
-        WiFiClient client;
+void sendToServer(int containerIdFilling, float sensorValue) {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    WiFiClient client;
 
-        String url = API_SERVER_BASE_URL + String(sensorId) + "/sensor-value-update/";
-        http.begin(client, url);
+    String url = API_SERVER_BASE_URL;
+    http.begin(client, url);
 
-        http.addHeader("Content-Type", "application/json");
+    http.addHeader("Content-Type", "application/json");
 
-        StaticJsonDocument<200> doc;
-        doc["sensor_value"] = fillLevel;
+    StaticJsonDocument<200> doc;
+    doc["container_id_filling"] = containerIdFilling;
+    doc["sensor_value"] = sensorValue;
 
-        String payload;
-        serializeJson(doc, payload);
+    String payload;
+    serializeJson(doc, payload);
 
-        int httpResponseCode = http.sendRequest("PATCH", payload);
+    Serial.println("\nSending POST to server...");
+    Serial.print("Request Body: ");
+    Serial.println(payload);
 
-        if (httpResponseCode > 0) {
-            String response = http.getString();
-            Serial.println("Data sent successfully. Response: " + response);
-        } else {
-            Serial.println("Error sending data: " + String(httpResponseCode));
-        }
+    int httpResponseCode = http.POST(payload);
 
-        http.end();
+    if (httpResponseCode > 0) {
+      Serial.print("HTTP code response: ");
+      Serial.println(httpResponseCode);
+      String response = http.getString();
+      Serial.println("Response server:");
+      Serial.println(response);
     } else {
-        Serial.println("WiFi not connected");
+      Serial.print("Error of HTTP: ");
+      Serial.println(httpResponseCode);
     }
+
+    http.end();
+  } else {
+    Serial.println("WiFi is not connected");
+  }
 }

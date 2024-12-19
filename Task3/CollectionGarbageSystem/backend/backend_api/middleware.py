@@ -5,11 +5,14 @@ from rest_framework.exceptions import AuthenticationFailed
 from .models import CustomUser 
 from django.utils.functional import SimpleLazyObject
 
+# Thread-local storage to hold the request object, ensuring request data is isolated per thread
 _request_storage = local()
 
+# Function to get the current request from thread-local storage
 def get_current_request():
     return getattr(_request_storage, 'request', None)
 
+# Function to extract the user from the token in the request
 def get_user_from_token(request):
     token = request.COOKIES.get('access_token')  
     if not token:
@@ -32,6 +35,7 @@ def get_user_from_token(request):
 
     return user
 
+# Function to get the user from the request, caching the result for subsequent access
 def get_user(request):
     if not hasattr(request, '_cached_user'):
         try:
@@ -40,6 +44,7 @@ def get_user(request):
             request._cached_user = None
     return request._cached_user
 
+# Middleware class to manage request and user access
 class RequestMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response

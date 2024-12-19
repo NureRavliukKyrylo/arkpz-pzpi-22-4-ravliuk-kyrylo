@@ -65,6 +65,7 @@ class StationOfContainersViewSet(GenericViewSet):
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 
+    # applying filters for searching station 
     def apply_filters(self, request, queryset):
         filter_backend = DjangoFilterBackend()
         return filter_backend.filter_queryset(request, queryset, self)
@@ -73,6 +74,7 @@ class StationOfContainersViewSet(GenericViewSet):
         search_backend = SearchFilter()
         return search_backend.filter_queryset(request, queryset, self)
     
+    # Custom action to update status for station
     @action(detail=True, methods=['patch'],url_path='update-status')
     @swagger_auto_schema(
         operation_description="Partially update the status_station field of a station",

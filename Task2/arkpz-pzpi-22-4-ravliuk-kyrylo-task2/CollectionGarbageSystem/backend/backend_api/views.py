@@ -16,6 +16,7 @@ from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework import status
 
+# View to register a new customer
 class RegisterCustomerView(APIView):
     @swagger_auto_schema(
         request_body=RegisterCustomerSerializer,
@@ -31,6 +32,7 @@ class RegisterCustomerView(APIView):
             return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# View to login an existing customer
 class LoginCustomerView(APIView):
     @swagger_auto_schema(
         request_body=LoginCustomerSerializer,
@@ -72,6 +74,7 @@ class LoginCustomerView(APIView):
 class MineTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
+# View to logout a customer
 class LogoutCustomerView(APIView):
 
     @swagger_auto_schema(

@@ -3,25 +3,10 @@ from reportlab.lib.pagesizes import letter
 from collections import defaultdict
 from django.http import HttpResponse
 import os
-from .charts import create_waste_trend_plot,calculate_statistics_for_containers,create_statistics_chart_for_containers
-from datetime import timedelta
-import numpy as np
+from .charts import create_waste_trend_plot,create_statistics_chart_for_containers
+from .math_statistics import calculate_statistics_for_containers, polynomial_regression_forecast
 
-def polynomial_regression_forecast(dates, amounts, future_days, degree=2):
-    
-    days = [(date - dates[0]).days for date in dates]
-
-    coefficients = np.polyfit(days, amounts, degree)
-    poly = np.poly1d(coefficients)
-
-    future_predictions = []
-    for i in range(1, future_days + 1):
-        future_day = days[-1] + i
-        predicted_amount = poly(future_day)
-        future_predictions.append((dates[-1] + timedelta(days=i), predicted_amount))
-
-    return future_predictions
-
+# This function generates PDF reports for waste history, including trends and statistics.
 def generate_waste_report_pdf(waste_histories, start_date, end_date, future_days=7):
     if not waste_histories:
         return HttpResponse("No waste history data provided.", content_type="text/plain")
@@ -86,6 +71,7 @@ def generate_waste_report_pdf(waste_histories, start_date, end_date, future_days
     pdf_canvas.save()
     return response
 
+# Function to generate PDF report for container-specific waste statistics
 def generate_waste_report_for_containers_pdf(waste_histories, start_date, end_date):
     if not waste_histories:
         return HttpResponse("No waste history data provided.", content_type="text/plain")

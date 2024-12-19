@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
+# Models creating tables in DB
 class RoleUser(models.Model):
     name = models.CharField(max_length=255, unique=True)
 

@@ -48,6 +48,7 @@ class CollectionSchedulesViewSet(GenericViewSet):
             return Response(serializer.data)
         return Response(self.format_error(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
 
+# Custom action to update the collection date for a specific collection schedule
     @action(detail=True, methods=['patch'], url_path='update-collection-date')
     @swagger_auto_schema(
         operation_description="Update collection date for station",

@@ -1,10 +1,10 @@
 import matplotlib
+# Set matplotlib to use a non-interactive backend (useful for running in server environments)
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import tempfile
-from statistics import median, mode
-from collections import defaultdict
 
+# Function to create a waste trend plot over time, with optional forecast predictions
 def create_waste_trend_plot(dates, amounts, predictions=None):
     plt.figure(figsize=(6, 4))
     plt.plot(dates, amounts, marker='o', color='b', linestyle='-', label='Waste Amount')
@@ -27,34 +27,7 @@ def create_waste_trend_plot(dates, amounts, predictions=None):
         plt.close()
     return img_path
 
-def calculate_statistics_for_containers(waste_histories):
-    material_stats = defaultdict(list)
-
-    for history in waste_histories:
-        material = history.container_id_filling.type_of_container_id.type_name_container
-        volume = (history.sensor_value / 100) * history.container_id_filling.type_of_container_id.volume_container
-        material_stats[material].append(volume)
-
-    report_data = {}
-    for material, volumes in material_stats.items():
-        avg = round(sum(volumes) / len(volumes), 2)
-        try:
-            mode_val = round(mode(volumes), 2)
-        except:
-            mode_val = "No mode"
-
-        min_val = round(min(volumes), 2)
-        max_val = round(max(volumes), 2)
-
-        report_data[material] = {
-            "average": avg,
-            "mode": mode_val,
-            "min": min_val,
-            "max": max_val
-        }
-
-    return report_data
-
+# Function to create a bar chart for container waste volume statistics (average and mode)
 def create_statistics_chart_for_containers(report_data):
     materials = list(report_data.keys())
     averages = [stats["average"] for stats in report_data.values()]

@@ -7,14 +7,17 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
 
+# Signal to check the container fill level before saving IoTFillingContainer
 @receiver(pre_save, sender=IoTFillingContainer)
 def check_container_fill_level(sender, instance, **kwargs):
+    # Compare the current and previous sensor values to check if the container's fill level has changed
     if instance.pk:
         previous_instance = IoTFillingContainer.objects.get(pk=instance.pk)
         previous_sensor_value = previous_instance.sensor_value
     else:
         previous_sensor_value = None 
 
+    # If the sensor value has changed, update the container's status
     if previous_sensor_value != instance.sensor_value:
         container = instance.container_id_filling
         if container:
@@ -34,6 +37,7 @@ def check_container_fill_level(sender, instance, **kwargs):
                             station_id=container.station_id
                         )
 
+                        # Notify all operators about the container needing reservation
                         send_mail(
                             subject="Action Required: Container Reservation",
                             message=NotificationsUser.objects.filter(user_id = operator).latest('timestamp_get_notification').message,
@@ -42,13 +46,15 @@ def check_container_fill_level(sender, instance, **kwargs):
                             fail_silently=False,
                         )
             elif instance.sensor_value <= 90:
+                # Set container status to "Active" if the sensor value is 90 or below
                 active_status, created = StatusOfContainer.objects.get_or_create(status_name="Active")
                 container.status_container_id = active_status
                 container.save()
 
-
+# Signal to update the last reserved date on status change for StationOfContainers
 @receiver(pre_save, sender=StationOfContainers)
 def update_last_reserved_on_status_change(sender, instance, **kwargs):
+    # If the station's status changes from "Reserving" to "Active", update the last reserved date
     if instance.pk: 
         previous_instance = StationOfContainers.objects.get(pk=instance.pk)
         
@@ -56,8 +62,10 @@ def update_last_reserved_on_status_change(sender, instance, **kwargs):
             instance.status_station.station_status_name == "Active"):
             instance.last_reserved = timezone.now() 
 
+# Signal to create a WasteHistory record when a station status changes from "Reserving"
 @receiver(post_save, sender=StationOfContainers)
 def create_waste_history_on_status_change(sender, instance, **kwargs):
+    
     if instance.pk: 
         previous_instance = StationOfContainers.objects.get(pk=instance.pk)
         
@@ -70,16 +78,19 @@ def create_waste_history_on_status_change(sender, instance, **kwargs):
 def get_reserving_status():
     return StationOfContainersStatus.objects.get_or_create(station_status_name="Reserving")[0]
 
+# Signal to update the station's status when a collection schedule is created
 @receiver(post_save, sender=CollectionSchedules)
 def update_station_status_on_schedule(sender, instance, created, **kwargs):
     if not created:  
         return
     
+    # If the schedule's collection date matches today's date, set the station's status to "Reserving"
     if instance.collection_date.date() == timezone.now().date():
         station = instance.station_of_containers_id
         station.status_station = get_reserving_status()
         station.save()
 
+# Signal to check for updates to the collection date and notify users
 @receiver(pre_save, sender=CollectionSchedules)
 def check_collection_date_update(sender, instance, **kwargs):
     if instance.pk:
@@ -133,4 +144,3 @@ def check_collection_date_update(sender, instance, **kwargs):
                         recipient_list=[operator.email],
                         fail_silently=False,
                     )
-

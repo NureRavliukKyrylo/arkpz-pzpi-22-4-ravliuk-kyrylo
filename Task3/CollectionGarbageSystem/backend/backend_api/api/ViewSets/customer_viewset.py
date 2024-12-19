@@ -57,6 +57,7 @@ class CustomerViewSet(GenericViewSet):
         except self.queryset.model.DoesNotExist:
             return Response({"error": f"A Customer with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
     
+    # Custom action to change the password for a customer
     @action(detail=True, methods=['patch'], url_path='change-password')
     @swagger_auto_schema(
         operation_description="Change password for a customer",
@@ -64,6 +65,7 @@ class CustomerViewSet(GenericViewSet):
         responses={200: "Password updated successfully", 400: "Invalid input"}
     )
     def change_password(self, request, pk=None):
+        # Retrieve the authenticated user from the request to check if for this user changing password
         user_id_from_token = get_user(request)
 
         print(f"Authenticated user ID: {user_id_from_token.id}")
@@ -89,6 +91,7 @@ class CustomerViewSet(GenericViewSet):
 
             return Response({"error": f"A Customer with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
     
+    # Custom action to update the role of a customer (only accessible by admins)
     @action(detail=True, methods=['patch'], url_path='update-role')
     @swagger_auto_schema(
         operation_description="Change Role for a customer",

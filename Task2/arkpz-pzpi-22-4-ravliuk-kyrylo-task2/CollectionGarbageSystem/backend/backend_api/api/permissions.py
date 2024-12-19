@@ -4,6 +4,7 @@ import jwt
 from django.conf import settings
 from ..models import CustomUser
 
+# Permissions for role-based access control and user authentication.
 class JWTAuthenticationHelper:
     
     @staticmethod

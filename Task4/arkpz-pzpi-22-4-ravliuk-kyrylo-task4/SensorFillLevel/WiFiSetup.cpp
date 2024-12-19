@@ -1,6 +1,6 @@
 #include "WiFiSetup.h"
 
-const char* WIFI_SSID = "";
+const char* WIFI_SSID = "Wokwi-GUEST";
 const char* WIFI_PASSWORD = "";
 
 void connectToWiFi() {

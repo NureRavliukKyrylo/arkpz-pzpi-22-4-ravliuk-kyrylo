@@ -2,6 +2,8 @@ from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from ..middleware import get_user_from_token
 
+# Permissions for role-based access control and user authentication.
+
 class IsAuthenticated(BasePermission):
     
     def has_permission(self, request, view):

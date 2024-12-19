@@ -61,6 +61,7 @@ class ContainersViewSet(GenericViewSet):
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 
+    # apply filters for searching containers
     def apply_filters(self, request, queryset):
         filter_backend = DjangoFilterBackend()
         return filter_backend.filter_queryset(request, queryset, self)
@@ -81,6 +82,7 @@ class ContainersViewSet(GenericViewSet):
         except self.queryset.model.DoesNotExist:
             return Response({"error": f"A Container with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
     
+    # Custom action to partially update the status of a container
     @action(detail=True, methods=['patch'], url_path='update-status')
     @swagger_auto_schema(
         operation_description="Partially update the status of a container",
@@ -108,6 +110,7 @@ class ContainersViewSet(GenericViewSet):
         except Containers.DoesNotExist:
             return Response({"error": f"A Container with ID {pk} does not exist."}, status=status.HTTP_404_NOT_FOUND)
 
+    # Custom action to partially update the type of a container
     @action(detail=True, methods=['patch'], url_path='update-type')
     @swagger_auto_schema(
         operation_description="Partially update the type of a container",
