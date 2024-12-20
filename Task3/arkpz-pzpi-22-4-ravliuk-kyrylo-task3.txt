@@ -1,0 +1,547 @@
+Харківський університет радіоелектроніки Факультет комп'ютерних наук
+Кафедра програмної інженерії
+
+
+
+
+
+
+ЗВІТ
+
+з лабораторного заняття №3 
+з дисципліни  «Аналіз та рефакторинг коду»
+на тему: «РОЗРОБКА БІЗНЕС-ЛОГІКИ ТА ФУНКЦІЙ АДМІНІСТРУВАННЯ СЕРВЕРНОЇ ЧАСТИНИ ПРОГРАМНОЇ СИСТЕМИ»
+
+
+
+
+Виконав ст. гр ПЗПІ-22-4
+
+Равлюк Кирило Станіславович
+
+
+
+Перевірив
+
+ст. викладач кафедри ПІ Сокорчук Ігор Петрович
+
+
+
+
+
+Харків 2024
+
+1 МЕТА РОБОТИ
+
+Метою цього лабораторного заняття є розробка бізнес-логіки та функцій адміністрування серверної частини програмної системи для забезпечення її безпеки, надійності та зручності використання. 
+
+2 ХІД РОБОТИ
+
+У ході виконання лабораторної роботи було впроваджено ряд функцій, які охоплюють основні аспекти управління системою, забезпечення її безпеки та аналізу даних.
+- Зміна пароля користувача: програмна система дозволяє користувачам змінювати пароль після успішної автентифікації, що підвищує безпеку облікових записів і зручність управління доступом.
+- Безпечне зберігання паролів:  паролі зберігаються у вигляді хешів, створених за допомогою алгоритму SHA-256, що гарантує високий рівень захисту від компрометації даних.
+- Автентифікація через JWT-токени: використання JWT-токенів для авторизації дозволяє забезпечити надійну роботу із сесіями користувачів та обмежити доступ до функціоналу для неавторизованих осіб.
+- Обмеження доступу за ролями: програмна система підтримує перевірку ролей (оператор, користувач, адміністратор) за допомогою permission_classes, що забезпечує доступ до функцій відповідно до рівня прав користувача.
+- Сповіщення про зміни графіку збору: У разі змін у графіку збору повідомлення автоматично надсилаються операторам і користувачам, що дозволяє своєчасно інформувати про оновлення.
+- Бізнес-логіка для зміни статусу станції: у разі перемикання статусу станції з «Обслуговування» на «Активний» автоматично створюється запис в історії переробки сміття. Це забезпечує безперервний облік даних про обсяги перероблених відходів, що дозволяє аналізувати ефективність роботи станції та підтримувати цілісність аналітичної інформації.
+- Створення та відновлення резервних копій бази даних: системні адміністратори можуть створювати резервні копії бази даних і відновлювати їх, що забезпечує захист від втрати даних у разі збоїв.
+- Перегляд логів дій користувачів: системний адміністратор має доступ до логів, які дозволяють відстежувати активність користувачів та ідентифікувати можливі загрози чи помилки.
+- Звіти для адміністратора: система надає аналітичні звіти, які включають інформацію про популярність станцій збору та типів контейнерів, що допомагає оптимізувати ресурси та управління процесами.
+- Аналітика даних щодо переробки сміття: пля аналізу обсягів сміття використовується поліноміальна регресія, яка дозволяє виявляти тенденції, прогнозувати майбутні обсяги, а також аналізувати залежності між часом та кількістю відходів.
+- Статистична обробка даних: проведено аналіз мінімальних, максимальних, середніх значень та медіани обсягів сміття для кожного типу контейнеру.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ВИСНОВКИ
+
+У процесі виконання лабораторної роботи було розроблено бізнес-логіку серверної частини системи, яка охоплює ключові аспекти безпеки, адміністрування та аналітики даних. Реалізовано функції зміни пароля, захисту паролів через алгоритм SHA-256, авторизації за допомогою JWT-токенів і перевірки доступу користувачів за ролями.
+Особливу увагу приділено функціям адміністрування: додано можливість створення та відновлення резервних копій бази даних, перегляд логів дій користувачів і генерація звітів для аналізу популярності станцій збору та типів контейнерів. Було автоматизовано надсилання нотифікацій користувачам і операторам у разі зміни графіку збору, що підвищує оперативність інформування.
+Для забезпечення повного контролю над бізнес-процесами створено логіку, яка автоматично додає записи в історію переробки сміття при зміні статусу станції з «Обслуговування» на «Активний». Це дозволяє вести безперервний облік даних та аналізувати ефективність роботи станцій.
+Також у ході роботи було створено діаграми діяльності для основних функцій системи, включаючи створення резервної копії бази даних, її відновлення та генерацію звітів. Для деталізації взаємодії між компонентами системи створено діаграму взаємодії, яка описує процес створення резервної копії бази даних.
+Було створено відеозапис: https://www.youtube.com/watch?v=9Db3FhQBhvk
+
+
+
+
+
+
+
+
+
+
+
+ДОДАТОК А
+UML-діаграми діяльності для серверної частини системи
+
+ 
+Рисунок А.1 - UML-діаграма діяльності для створення звітів.
+  
+ 
+Рисунок А.2 - UML-діаграма діяльності для зміни дати графіку збору.
+
+ 
+Рисунок А.3 - UML-діаграма діяльності для отримання логування дій користувачів.
+ 
+Рисунок А.4 - UML-діаграма діяльності для здійснення резервної копії або відновлення бази даних.
+
+
+
+
+
+
+
+
+
+
+
+
+ДОДАТОК Б
+UML-діаграма взаємодії
+
+ 
+
+Рисунок Б.1 - UML-діаграма взаємодії для створення резервної копії бази даних.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ДОДАТОК В
+Програмний код функцій адміністрування
+
+          Функції управління базою даних:
+     1  from django.http import HttpResponse, JsonResponse
+     2  import json
+     3  from rest_framework.views import APIView
+     4  from rest_framework.response import Response
+     5  from rest_framework import status
+     6  from drf_yasg.utils import swagger_auto_schema
+     7  from drf_yasg import openapi
+     8  from rest_framework.parsers import MultiPartParser
+     9  from django.db import transaction
+    10  from django.db.utils import IntegrityError
+    11  from rest_framework import status
+    12  from django.apps import apps
+    13  from django.db.models.signals import pre_save, post_save
+    14  from django.db.models.signals import pre_delete, post_delete
+    15  from contextlib import contextmanager
+    16  from django.db import connection
+    17  from datetime import datetime
+    18
+    19  # Custom JSON serializer to handle datetime objects
+    20  def custom_json_serializer(obj):
+    21      if isinstance(obj, datetime):
+    22          return obj.isoformat()
+    23      raise TypeError(f"Type {type(obj)} not serializable")
+    24
+    25  # View to download a backup of specified models' data
+    26  class DownloadBackupView(APIView):
+    27      @swagger_auto_schema(
+    28          operation_summary="Download database backup",
+    29          operation_description=(
+    30              "This endpoint generates a JSON backup of the specified models' data in the database. "
+    31              "The response will be a downloadable JSON file."
+    32          ),
+    33          responses={
+    34              200: openapi.Response(
+    35                  description="Backup file generated successfully",
+    36                  examples={
+    37                      "application/json": {
+    38                          "message": "JSON file downloaded successfully."
+    39                      }
+    40                  }
+    41              ),
+    42              404: openapi.Response(
+    43                  description="No data available for backup.",
+    44                  examples={
+    45                      "application/json": {
+    46                          "message": "No data available for backup."
+    47                      }
+    48                  }
+    49              ),
+    50              500: openapi.Response(
+    51                  description="Unexpected error",
+    52                  examples={
+    53                      "application/json": {
+    54                          "error": "An error occurred: <error message>"
+    55                      }
+    56                  }
+    57              ),
+    58          }
+    59      )
+    60      def post(self, request, *args, **kwargs):
+    61          models_to_load = [  # List of models to back up
+    62              "backend_api.roleuser",
+    63              "backend_api.StationOfContainersStatus",
+    64              "backend_api.NotificationTypes",
+    65              "backend_api.StatusOfContainer",
+    66              "backend_api.TypeOfContainer",
+    67              "backend_api.customuser",
+    68              "backend_api.StationOfContainers",
+    69              "backend_api.CollectionSchedules",
+    70              "backend_api.NotificationsUser",
+    71              "backend_api.Containers",
+    72              "backend_api.IoTFillingContainer",
+    73              "backend_api.WasteHistory",
+    74              "backend_api.AdminLoggingChanges",
+    75          ]
+    76
+    77          try:
+    78              backup_data = {}
+    79
+    80              # Loop over models and retrieve their data
+    81              for model_path in models_to_load:
+    82                  if "." not in model_path:
+    83                      backup_data[model_path] = "Invalid model format. Expected '<app_label>.<model_name>'."
+    84                      continue
+    85
+    86                  try:
+    87                      app_label, model_name = model_path.split(".")
+    88                      model = apps.get_model(app_label, model_name)
+    89                      model_data = list(model.objects.all().values())
+    90                      backup_data[model_path] = model_data
+    91                  except LookupError:
+    92                      backup_data[model_path] = f"Model {model_path} not found."
+    93
+    94               # Check if backup data is available
+    95              if not any(isinstance(v, list) and v for v in backup_data.values()):
+    96                  return Response({"message": "No data available for backup."}, status=status.HTTP_404_NOT_FOUND)
+    97
+    98              json_data = json.dumps(backup_data, default=custom_json_serializer, indent=4)
+    99
+   100              response = HttpResponse(json_data, content_type="application/json")
+   101              response['Content-Disposition'] = 'attachment; filename="models_backup.json"'
+   102              return response
+   103
+   104          except Exception as e:
+   105              return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
+   106
+   107  # Context manager to temporarily disable database signals
+   108  @contextmanager
+   109  def disable_all_signals():
+   110      signals_to_disconnect = [pre_save, post_save, pre_delete, post_delete]
+   111      disconnected_signals = {}
+   112
+   113      for signal in signals_to_disconnect:
+   114          disconnected_signals[signal] = signal.receivers[:]
+   115          signal.receivers.clear()
+   116
+   117      try:
+   118          yield
+   119      finally:
+   120          for signal, receivers in disconnected_signals.items():
+   121              signal.receivers.extend(receivers)
+   122
+   123  # View to restore data from a JSON backup file
+   124  class RestoreBackupView(APIView):
+   125      parser_classes = [MultiPartParser]
+   126
+   127      @swagger_auto_schema(
+   128          operation_summary="Restore database backup",
+   129          operation_description="Restores data to the database from a JSON backup file. The file should be in the same format as the backup data.",
+   130          manual_parameters=[
+   131              openapi.Parameter(
+   132                  name="file",
+   133                  in_=openapi.IN_FORM,
+   134                  type=openapi.TYPE_FILE,
+   135                  required=True,
+   136                  description="JSON backup file to restore data"
+   137              )
+   138          ],
+   139          responses={
+   140              200: openapi.Response(
+   141                  description="Data restored successfully",
+   142                  examples={
+   143                      "application/json": {
+   144                          "message": "Data restored successfully."
+   145                      }
+   146                  }
+   147              ),
+   148              400: openapi.Response(
+   149                  description="Invalid backup data",
+   150                  examples={
+   151                      "application/json": {
+   152                          "error": "Invalid data format."
+   153                      }
+   154                  }
+   155              ),
+   156              500: openapi.Response(
+   157                  description="Unexpected error",
+   158                  examples={
+   159                      "application/json": {
+   160                          "error": "An error occurred: <error message>"
+   161                      }
+   162                  }
+   163              ),
+   164          }
+   165      )
+   166      def post(self, request, *args, **kwargs):
+   167          file = request.FILES.get('file')
+   168          if not file:
+   169              return JsonResponse({"error": "No file provided."}, status=400)
+   170
+   171          try:
+   172              backup_data = json.load(file)  # Load backup data from file
+   173          except json.JSONDecodeError:
+   174              return JsonResponse({"error": "Invalid JSON format."}, status=400)
+   175
+   176          with disable_all_signals(): # Disable signals to prevent unintended side effects
+   177              try:
+   178                  errors = []
+   179                  for model_path, records in backup_data.items():
+   180                      if not isinstance(records, list):
+   181                          errors.append(f"Data for {model_path} is not a list.")
+   182                          continue
+   183
+   184                      try:
+   185                          app_label, model_name = model_path.split(".")
+   186                          model = apps.get_model(app_label, model_name)
+   187                      except (ValueError, LookupError):
+   188                          errors.append(f"Invalid model path: {model_path}")
+   189                          continue
+   190
+   191                      with transaction.atomic():
+   192                          for record in records:
+   193                              try:
+   194                                  obj, created = model.objects.update_or_create(
+   195                                      id=record.get("id"), defaults=record    # Restore or update record
+   196                                  )
+   197                              except IntegrityError as e:
+   198                                  errors.append(
+   199                                      f"Integrity error for {model_path} with ID {record.get('id')}: {str(e)}"
+   200                                  )
+   201                                  continue
+   202
+   203                          self.update_sequence_for_model(model)
+   204
+   205                  if errors:
+   206                      return JsonResponse({"message": "Partial restore completed.", "errors": errors}, status=400)
+   207
+   208                  return JsonResponse({"message": "Data restored successfully."}, status=200)
+   209
+   210              except Exception as e:
+   211                  return JsonResponse({"error": f"An error occurred: {str(e)}"}, status=500)
+   212
+   213      def update_sequence_for_model(self, model):
+   214          table_name = model._meta.db_table
+   215          pk_name = model._meta.pk.column
+   216
+   217          # Update the sequence for auto-increment fields
+   218          with connection.cursor() as cursor:
+   219              cursor.execute(f"SELECT MAX({pk_name}) FROM {table_name}")
+   220              max_id = cursor.fetchone()[0] or 0
+   221
+   222              sequence_name = f"{table_name}_{pk_name}_seq"
+   223              cursor.execute(f"SELECT setval('{sequence_name}', %s)", [max_id + 1])
+
+        Функції отримання звітів:
+     1  from django.http import JsonResponse
+     2  import json
+     3  from backend_api.api.serializers import DateRangeSerializer
+     4  from ...models import WasteHistory,IoTFillingContainer
+     5  from backend_api.api.validators import validate_date_range
+     6  from backend_api.api.pdf_generators import generate_waste_report_pdf,generate_waste_report_for_containers_pdf
+     7  from backend_api.api.permissions import IsAdminAuthenticated
+     8  from rest_framework.views import APIView
+     9  from drf_yasg.utils import swagger_auto_schema
+    10  from rest_framework.exceptions import PermissionDenied
+    11
+    12  class GetReportOfStationsView(APIView):
+    13      # Define permission classes, only admin users can access this view
+    14      permission_classes = [IsAdminAuthenticated]
+    15      @swagger_auto_schema(
+    16          request_body=DateRangeSerializer,
+    17          responses={
+    18              200: 'PDF report generated successfully',
+    19              400: 'Invalid input',
+    20              403: 'Permission denied',
+    21              500: 'Unexpected error'
+    22          }
+    23      )
+    24      def post(self, request):
+    25          try:
+    26              # Extract data from the request body
+    27              data = request.data
+    28              start_date = data.get('start_date')
+    29              end_date = data.get('end_date')
+    30              if not start_date or not end_date:
+    31                  return JsonResponse({"error": "Both start_date and end_date are required."}, status=400)
+    32
+    33              # Filter the WasteHistory objects based on the provided date range
+    34              waste_histories = WasteHistory.objects.filter(
+    35                  recycling_date__gte=start_date,
+    36                  recycling_date__lte=end_date,
+    37                  station_id__isnull=False
+    38              )
+    39
+    40               # Generate the PDF report for waste histories
+    41              response = generate_waste_report_pdf(waste_histories, start_date, end_date)
+    42              return response
+    43
+    44          except json.JSONDecodeError:
+    45              return JsonResponse({"error": "Invalid JSON format"}, status=400)
+    46          except ValueError as e:
+    47              return JsonResponse({"error": str(e)}, status=400)
+    48          except PermissionDenied as e:
+    49              return JsonResponse({"error": str(e)}, status=403)
+    50          except Exception as e:
+    51              return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
+    52
+    53
+    54  class GetReportOfContainersView(APIView):
+    55       # Define permission classes, only admin users can access this view
+    56      permission_classes = [IsAdminAuthenticated]
+    57      @swagger_auto_schema(
+    58          request_body=DateRangeSerializer,
+    59          responses={
+    60              200: 'PDF report generated successfully',
+    61              400: 'Invalid input',
+    62              403: 'Permission denied',
+    63              500: 'Unexpected error'
+    64          }
+    65      )
+    66      def post(self, request):
+    67           # Extract data from the request body
+    68          try:
+    69              data = request.data
+    70              start_date = data.get('start_date')
+    71              end_date = data.get('end_date')
+    72
+    73              if not start_date or not end_date:
+    74                  return JsonResponse({"error": "Both start_date and end_date are required."}, status=400)
+    75
+    76              start_date, end_date = validate_date_range({'start_date': start_date, 'end_date': end_date})
+    77
+    78              # Filter the IoTFillingContainer objects based on the provided date range
+    79              waste_histories = IoTFillingContainer.objects.filter(
+    80                  time_of_detect__gte=start_date,
+    81                  time_of_detect__lte=end_date
+    82              ).select_related('container_id_filling__type_of_container_id')
+    83
+    84              # If data is found, generate the PDF report for containers
+    85              if waste_histories.exists():
+    86                  response = generate_waste_report_for_containers_pdf(waste_histories, start_date, end_date)
+    87                  return response
+    88
+    89              return JsonResponse({"error": "No data found for the given date range."}, status=404)
+    90
+    91          except json.JSONDecodeError:
+    92              return JsonResponse({"error": "Invalid JSON format"}, status=400)
+    93          except ValueError as e:
+    94              return JsonResponse({"error": str(e)}, status=400)
+    95          except PermissionDenied:
+    96              return JsonResponse({"error": "Permission denied"}, status=403)
+    97          except Exception as e:
+    98              return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ДОДАТОК Г
+Програмний код обчислення математичної статистики
+
+     1  from statistics import mode
+     2  from collections import defaultdict
+     3  from datetime import timedelta
+     4  import numpy as np
+     5
+     6  # Function to perform polynomial regression and predict future waste data trends
+     7  def polynomial_regression_forecast(dates, amounts, future_days, degree=2):
+     8
+     9      # Calculate the number of days since the first date for each data point
+    10      days = [(date - dates[0]).days for date in dates]
+    11
+    12       # Fit polynomial regression to the data
+    13      coefficients = np.polyfit(days, amounts, degree)
+    14      poly = np.poly1d(coefficients)
+    15
+    16      # Predict future waste amounts for the next 'future_days' days
+    17      future_predictions = []
+    18      for i in range(1, future_days + 1):
+    19          future_day = days[-1] + i
+    20          predicted_amount = poly(future_day)
+    21          future_predictions.append((dates[-1] + timedelta(days=i), predicted_amount))
+    22
+    23      return future_predictions
+    24
+    25  # Function to calculate statistics for containers based on waste history data
+    26  def calculate_statistics_for_containers(waste_histories):
+    27      material_stats = defaultdict(list)
+    28
+    29      for history in waste_histories:
+    30          material = history.container_id_filling.type_of_container_id.type_name_container
+    31          volume = (history.sensor_value / 100) * history.container_id_filling.type_of_container_id.volume_container
+    32          material_stats[material].append(volume)
+    33
+    34      report_data = {}
+    35
+    36      # Calculate statistics (average, mode, min, and max) for each material
+    37      for material, volumes in material_stats.items():
+    38          avg = round(sum(volumes) / len(volumes), 2)
+    39          try:
+    40              mode_val = round(mode(volumes), 2)
+    41          except:
+    42              mode_val = "No mode"
+    43
+    44          min_val = round(min(volumes), 2)
+    45          max_val = round(max(volumes), 2)
+    46
+    47          report_data[material] = {
+    48              "average": avg,
+    49              "mode": mode_val,
+    50              "min": min_val,
+    51              "max": max_val
+    52          }
+    53
+    54      return report_data
+
