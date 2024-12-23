@@ -18,6 +18,9 @@ const int MAX_DISTANCE_CM = 100;
 
 KalmanFilter kalmanFilter;
 
+//URL API-endpoint
+String API_SERVER_BASE_URL;
+
 void setup() {
     Serial.begin(9600);
 
@@ -31,6 +34,17 @@ void setup() {
 
     // Connect to the WiFi network
     connectToWiFi();
+
+    // Entering API endpoint for making POST-queries
+    Serial.println("Enter the full server URL (including base path, or press Enter to use default):");
+    while (API_SERVER_BASE_URL.isEmpty()) {
+        if (Serial.available()) {
+            API_SERVER_BASE_URL = Serial.readStringUntil('\n');
+            API_SERVER_BASE_URL.trim();
+        }
+    }
+    Serial.print("Using server URL: ");
+    Serial.println(API_SERVER_BASE_URL);
 }
 
 // Measures the distance using the ultrasonic sensor
@@ -87,7 +101,7 @@ void loop() {
     Serial.println(" %");
 
     // Send the fill level and container ID to the server
-    sendToServer(CONTAINER_ID, fillLevel);
+    sendToServer(API_SERVER_BASE_URL, CONTAINER_ID, fillLevel);
 
     // Update the LED indicators based on the fill level
     updateLEDs(fillLevel);

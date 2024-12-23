@@ -1,23 +1,27 @@
 services:
+  # Define the Django application service
   djangoapp:
-    container_name: djangoapp
-    build: .
+    container_name: djangoapp # Set the container name to "djangoapp"
+    build: . # Build the image using the Dockerfile in the current directory
     ports:
-      - "8000:8000"
-    env_file: .env
+      - "8000:8000" # Map host port 8000 to container port 8000
+    env_file: .env # Use the .env file for environment variables
     depends_on:
-      - db
-  db:
-    container_name: db
-    image: postgres:13.18
-    environment:
-      - POSTGRES_USER=${DB_USER}  
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      - db # Ensure the database service is started before this service
 
+  # Define the PostgreSQL database service
+  db:
+    container_name: db # Set the container name to "db"
+    image: postgres:13.18 # Use the PostgreSQL 13.18 image
+    environment:
+      - POSTGRES_USER=${DB_USER} # Set the PostgreSQL username from the .env file
+      - POSTGRES_PASSWORD=${DB_PASSWORD} # Set the PostgreSQL password from the .env file
+      - POSTGRES_DB=${DB_NAME} # Set the PostgreSQL database name from the .env file
+    ports:
+      - "5432:5432" # Map host port 5432 to container port 5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data # Persist PostgreSQL data using a named volume
+
+# Define named volumes
 volumes:
-  pgdata: {}
+  pgdata: {} # Create a volume named "pgdata"

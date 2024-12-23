@@ -4,10 +4,10 @@
 // Class implementing a simple 1D Kalman Filter for signal smoothing and noise reduction.
 class KalmanFilter {
 private:
-    float processNoise = 0.022;            
-    float measurementNoise = 0.617;        
+    float processNoise = 0.02;          
+    float measurementNoise = 0.05;      
     float stateEstimate = 0;               
-    float errorCovariance = 1;            
+    float errorCovariance = 1;           
 
 public:
     KalmanFilter() {}

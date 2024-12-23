@@ -4,6 +4,6 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-void sendToServer(int sensorId, float fillLevel);
+void sendToServer(String API_SERVER_BASE_URL, int sensorId, float fillLevel);
 
 #endif 

@@ -1,17 +1,8 @@
 #include "DataServer.h"
 #include <WiFi.h>
 
-// Base URL for the API server
-const String API_SERVER_BASE_URL = "http://rnlmj-91-146-250-0.a.free.pinggy.link/api/iotFillingContainers/";
-
-/**
- * Sends container filling data to the server via HTTP POST request.
- *
- * @param containerIdFilling The ID of the container being filled.
- * @param sensorValue The sensor value indicating the container's fill level.
- */
-
-void sendToServer(int containerIdFilling, float sensorValue) {
+//Sends container filling data to the server via HTTP POST request.
+void sendToServer(String API_SERVER_BASE_URL, int containerIdFilling, float sensorValue) {
   // Check if the WiFi connection is active
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
