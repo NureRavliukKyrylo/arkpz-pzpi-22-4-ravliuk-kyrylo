@@ -1,0 +1,322 @@
+Харківський університет радіоелектроніки Факультет комп'ютерних наук
+Кафедра програмної інженерії
+
+
+
+
+
+
+ЗВІТ
+
+з лабораторного заняття №4 
+з дисципліни  «Аналіз та рефакторинг коду»
+на тему: «РОЗРОБКА IoT КЛІЄНТА 
+(БІЗНЕС-ЛОГІКИ ТА ФУНКЦІЙ НАЛАШТУВАННЯ)»
+
+
+
+
+Виконав ст. гр ПЗПІ-22-4
+
+Равлюк Кирило Станіславович
+
+
+
+Перевірив
+
+ст. викладач кафедри ПІ Сокорчук Ігор Петрович
+
+
+
+
+
+Харків 2024
+
+1 МЕТА РОБОТИ
+
+Метою роботи є розробка IoT-системи для моніторингу рівня заповненості контейнера з обробкою даних, автоматичною передачею на сервер і сповіщенням операторів.
+
+2 ХІД РОБОТИ
+
+У ході виконання лабораторної роботи було розроблено та реалізовано інженерні рішення, спрямовані на створення ефективного, надійного та автономного IoT-пристрою. Особливу увагу приділено забезпеченню стабільності системи, точності отримуваних даних та зручності інтеграції з іншими сервісами.
+Робота включала проєктування апаратної частини, розробку програмного забезпечення та впровадження алгоритмів для обробки даних, передачі інформації та реагування на зовнішні умови. Нижче наведено ключові аспекти функціоналу пристрою та прийняті технічні рішення.
+-	Вимірювання рівня заповненості контейнера: пристрій використовує ультразвуковий датчик HC-SR04 для визначення рівня заповненості контейнера. Дані з датчика перетворюються в значення відстані до поверхні сміття, що дозволяє точно розрахувати заповненість. Залежно від рівня:
+    •	До 30% заповнення: Світиться зелений індикатор, сигналізуючи про нормальний стан контейнера.
+    •	Від 30% до 90%: Вмикається жовтий індикатор, що вказує на підвищення рівня заповнення.
+    •	Понад 90%: Загоряється червоний індикатор, попереджаючи про необхідність обслуговування контейнера.
+-	Фільтрація даних за допомогою фільтра Калмана: ультразвуковий датчик може видавати шумові або некоректні дані через вплив зовнішніх факторів (вітер, рух об’єктів). Для отримання точних показників використовується фільтр Калмана, який згладжує дані, забезпечуючи їх надійність та точність.
+-	Передача даних на сервер: отримані дані про рівень заповненості надсилаються на сервер у форматі JSON за допомогою HTTP POST-запитів. Такий підхід дозволяє зручно інтегрувати пристрій із хмарними платформами, серверними системами чи іншими інструментами аналітики для збереження та подальшого аналізу.
+-	Автоматичне обчислення наповненості контейнера: для точного визначення наповненості контейнера розроблена бізнес-логіка, яка враховує об'єм контейнера та рівень заповненості, отриманий з ультразвукового датчика. Об'єм контейнера множиться на процентне значення рівня заповненості, що дозволяє отримати точний обсяг сміття, яке знаходиться в контейнері. Це автоматичне обчислення забезпечує точнішу інформацію для подальшої аналітики та прийняття рішень щодо обслуговування контейнера
+-	Сповіщення операторів: реалізовано бізнес-логіку для автоматичного надсилання сповіщень. Якщо рівень заповненості контейнера перевищує критичне значення (понад 90%), система автоматично інформує операторів про необхідність обслуговування, надсилаючи повідомлення на Email.
+-	Підключення до Wi-Fi мережі: у пристрої впроваджено алгоритм автоматичного з’єднання з бездротовою мережею. У випадку відсутності доступу до заданої мережі пристрій автоматично виконує повторні спроби підключення, забезпечуючи безперебійну роботу.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ВИСНОВКИ
+
+У процесі виконання лабораторної роботи було розроблено IoT-систему для моніторингу рівня заповненості контейнера, яка забезпечує автоматичну обробку даних, передачу інформації на сервер та сповіщення операторів про необхідність обслуговування. Реалізовано алгоритм фільтрації даних за допомогою фільтра Калмана, логіку обробки збоїв у передачі та механізми автоматичного підключення до мережі.
+Додатково створено діаграму прецедентів для IoT-клієнта, що описує взаємодію користувача з системою, та діаграму діяльності, яка демонструє основні етапи роботи пристрою, включаючи збір даних, їх обробку, передачу та відображення результатів.
+Запропоновані рішення забезпечують точність, стабільність і надійність системи, що робить її ефективним інструментом для автоматизації процесів моніторингу та обслуговування контейнерів.
+Було створено відеозапис: https://www.youtube.com/watch?v=ZE68ZeGv4iY
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ДОДАТОК А
+UML-діаграма прецедентів для IoT-клієнта
+
+ 
+Рисунок А.1 - UML-діаграма прецедентів IoT-клієнта та сервера.
+  
+ 
+Рисунок А.2 - UML-діаграма прецедентів IoT-клієнта та адміністратора.
+
+
+
+
+
+
+
+
+
+ДОДАТОК Б
+UML-діаграма діяльності IoT-клієнта
+
+ 
+Рисунок Б.1 - UML-діаграма діяльності IoT-клієнта.
+
+
+ДОДАТОК В
+Програмний код математичної обробки даних 
+
+     1  #ifndef KALMAN_FILTER_H
+     2  #define KALMAN_FILTER_H
+     3
+     4  // Class implementing a simple 1D Kalman Filter for signal smoothing and noise reduction.
+     5  class KalmanFilter {
+     6  private:
+     7      float processNoise = 0.02;
+     8      float measurementNoise = 0.05;
+     9      float stateEstimate = 0;
+    10      float errorCovariance = 1;
+    11
+    12  public:
+    13      KalmanFilter() {}
+    14
+    15      // Applies the Kalman filter algorithm to a new measurement.
+    16      // measurement: The new measurement to be filtered.
+    17      // Returns: The updated state estimate after filtering.
+    18      float filter(float measurement) {
+    19          float predictedState = stateEstimate;
+    20          float predictedErrorCovariance = errorCovariance + processNoise;
+    21
+    22          float kalmanGain = predictedErrorCovariance /
+    23                             (predictedErrorCovariance + measurementNoise);
+    24
+    25          stateEstimate = predictedState + kalmanGain * (measurement - predictedState);
+    26          errorCovariance = (1 - kalmanGain) * predictedErrorCovariance;
+    27
+    28          return stateEstimate;
+    29      }
+    30  };
+    31
+    32  #endif
+ДОДАТОК Г
+Програмний код відправки даних на сервер
+
+     1  #include "DataServer.h"
+     2  #include <WiFi.h>
+     3
+     4  //Sends container filling data to the server via HTTP POST request.
+     5  void sendToServer(String API_SERVER_BASE_URL, int containerIdFilling, float sensorValue) {
+     6    // Check if the WiFi connection is active
+     7    if (WiFi.status() == WL_CONNECTED) {
+     8      HTTPClient http;
+     9      WiFiClient client;
+    10
+    11      // Begin the HTTP request to the server
+    12      String url = API_SERVER_BASE_URL;
+    13      http.begin(client, url);
+    14
+    15      // Add the "Content-Type" header to specify JSON data
+    16      http.addHeader("Content-Type", "application/json");
+    17
+    18      // Create a JSON document for the payload
+    19      StaticJsonDocument<200> doc;
+    20      doc["container_id_filling"] = containerIdFilling;
+    21      doc["sensor_value"] = sensorValue;
+    22
+    23      // Serialize the JSON document into a string
+    24      String payload;
+    25      serializeJson(doc, payload);
+    26
+    27      // Send the POST request and capture the HTTP response code
+    28      Serial.println("\nSending POST to server...");
+    29      Serial.print("Request Body: ");
+    30      Serial.println(payload);
+    31
+    32      int httpResponseCode = http.POST(payload);
+    33
+    34      if (httpResponseCode > 0) {
+    35        Serial.print("HTTP code response: ");
+    36        Serial.println(httpResponseCode);
+    37        String response = http.getString();
+    38        Serial.println("Response server:");
+    39        Serial.println(response);
+    40      } else {
+    41        Serial.print("Error of HTTP: ");
+    42        Serial.println(httpResponseCode);
+    43      }
+    44
+    45      http.end();
+    46    } else {
+    47      Serial.println("WiFi is not connected");
+    48    }
+    49  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+ДОДАТОК Д
+Програмний код реалізації IoT-клієнта
+
+            1  #include <Adafruit_SSD1306.h>
+     2  #include "WiFiSetup.h"
+     3  #include "DataServer.h"
+     4  #include "KalmanFilter.h"
+     5
+     6  // Pin assignments for the ultrasonic sensor
+     7  const int TRIG_PIN = 4;
+     8  const int ECHO_PIN = 5;
+     9
+    10  // Pin assignments for the LEDs
+    11  const int RED_LED = 18;
+    12  const int YELLOW_LED = 19;
+    13  const int GREEN_LED = 21;
+    14
+    15  // Container information
+    16  const int CONTAINER_ID = 1;
+    17  const int MAX_DISTANCE_CM = 100;
+    18
+    19  KalmanFilter kalmanFilter;
+    20
+    21  //URL API-endpoint
+    22  String API_SERVER_BASE_URL;
+    23
+    24  void setup() {
+    25      Serial.begin(9600);
+    26
+    27      // Configuration sensor pins
+    28      pinMode(TRIG_PIN, OUTPUT);
+    29      pinMode(ECHO_PIN, INPUT);
+    30
+    31      pinMode(RED_LED, OUTPUT);
+    32      pinMode(YELLOW_LED, OUTPUT);
+    33      pinMode(GREEN_LED, OUTPUT);
+    34
+    35      // Connect to the WiFi network
+    36      connectToWiFi();
+    37
+    38      // Entering API endpoint for making POST-queries
+    39      Serial.println("Enter the full server URL (including base path, or press Enter to use default):");
+    40      while (API_SERVER_BASE_URL.isEmpty()) {
+    41          if (Serial.available()) {
+    42              API_SERVER_BASE_URL = Serial.readStringUntil('\n');
+    43              API_SERVER_BASE_URL.trim();
+    44          }
+    45      }
+    46      Serial.print("Using server URL: ");
+    47      Serial.println(API_SERVER_BASE_URL);
+    48  }
+    49
+    50  // Measures the distance using the ultrasonic sensor
+    51  float measureDistance() {
+    52      digitalWrite(TRIG_PIN, LOW);
+    53      delayMicroseconds(2);
+    54      digitalWrite(TRIG_PIN, HIGH);
+    55      delayMicroseconds(10);
+    56      digitalWrite(TRIG_PIN, LOW);
+    57
+    58      // Measure the duration of the echo signal
+    59      long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+    60      if (duration == 0) {
+    61          return MAX_DISTANCE_CM;
+    62      }
+    63      float distance = (duration * 0.034) / 2;
+    64      return distance;
+    65  }
+    66
+    67  // Updates the LED indicators based on the fill level
+    68  void updateLEDs(float fillLevel) {
+    69      if (fillLevel < 30) {
+    70          digitalWrite(RED_LED, LOW);
+    71          digitalWrite(YELLOW_LED, LOW);
+    72          digitalWrite(GREEN_LED, HIGH);
+    73      } else if (fillLevel >= 30 && fillLevel < 90) {
+    74          digitalWrite(RED_LED, LOW);
+    75          digitalWrite(YELLOW_LED, HIGH);
+    76          digitalWrite(GREEN_LED, LOW);
+    77      } else {
+    78          digitalWrite(RED_LED, HIGH);
+    79          digitalWrite(YELLOW_LED, LOW);
+    80          digitalWrite(GREEN_LED, LOW);
+    81      }
+    82  }
+    83
+    84  void loop() {
+    85      // Measure the distance from the ultrasonic sensor
+    86      float distance = measureDistance();
+    87
+    88      // Apply Kalman filter to smooth the measured distance
+    89      float filteredDistance = kalmanFilter.filter(distance);
+    90
+    91      // Calculate the fill level as a percentage
+    92      float fillLevel = (100 - filteredDistance) / MAX_DISTANCE_CM * 100;
+    93      fillLevel = constrain(fillLevel, 0, 100);
+    94
+    95      Serial.print("Measured Distance: ");
+    96      Serial.print(distance);
+    97      Serial.println(" cm");
+    98
+    99      Serial.print("Fill Level: ");
+   100      Serial.print(fillLevel);
+   101      Serial.println(" %");
+   102
+   103      // Send the fill level and container ID to the server
+   104      sendToServer(API_SERVER_BASE_URL, CONTAINER_ID, fillLevel);
+   105
+   106      // Update the LED indicators based on the fill level
+   107      updateLEDs(fillLevel);
+   108
+   109      delay(2000);
+   110  }
