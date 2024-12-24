@@ -1,0 +1,214 @@
+Харківський університет радіоелектроніки Факультет комп'ютерних наук
+Кафедра програмної інженерії
+
+
+
+
+
+
+ЗВІТ
+
+з лабораторного заняття №5
+з дисципліни  «Аналіз та рефакторинг коду»
+на тему: «РОЗГОРТАННЯ ПРОГРАМНОЇ СИСТЕМИ ТА ДЕМОНСТРАЦІЯ ЇЇ РОБОТИ»
+
+
+
+
+Виконав ст. гр ПЗПІ-22-4
+
+Равлюк Кирило Станіславович
+
+
+
+Перевірив
+
+ст. викладач кафедри ПІ Сокорчук Ігор Петрович
+
+
+
+
+
+
+Харків 2024
+
+1 МЕТА РОБОТИ
+
+Розгорнути програмну систему за допомогою Docker, перевірити її функціональність і виконати необхідні налаштування для роботи програмної системи. Завданням є забезпечення коректної взаємодії з іншими компонентами, а також демонстрація стабільності та надійності розгорнутої системи в реальних умовах експлуатації.
+
+2 ХІД РОБОТИ
+
+У ході виконання лабораторної роботи було розроблено та реалізовано інженерні рішення, спрямовані на створення ефективного, надійного та зручного середовища для розгортання програмної системи. Основна увага приділялась автоматизації процесів, забезпеченню стабільної взаємодії компонентів та збереженню конфіденційної інформації. Робота включала налаштування контейнеризації, розробку допоміжних скриптів та інтеграцію бази даних. Нижче наведено ключові аспекти виконаної роботи.
+- Створення Dockerfile: обрано офіційний базовий образ Python 3.13 для запуску застосунку. Встановлено останню версію pip для управління залежностями. Реалізовано автоматичне копіювання залежностей із файлу з бібліотекаит для коректної роботи серверу та їх встановлення. Налаштовано копіювання всіх файлів проекту в контейнер. Вказано порт 8000 для зовнішнього доступу до програми. Додано скрипт як точку входу для створення міграцій і запуску сервера.
+- Налаштування Docker Compose: визначено два сервіси – для Django застосунку та бази даних PostgreSQL. Сервіс будується з Dockerfile, використовує порт 8000 для доступу, підтримує змінні середовища з файлу середовища і залежить від бази даних. Сервіс бази даних базується на образі PostgreSQL 13.18, параметри підключення передаються через файл середовища, а дані бази зберігаються у постійному сховищі.
+- Файл середовищних змінних: створено файл, який містить конфіденційні дані, такі як параметри підключення до бази даних (хост, порт, користувач, пароль, ім’я).
+- Скрипт автоматизації: реалізовано Bash-скрипт, який виконує створення міграцій бази даних, їх застосування та запуск Django-сервера.
+- Файл списку бібліотек: у файлі перераховано необхідні бібліотеки, такі як Django, djangorestframework, psycopg2-binary тощо, які забезпечують роботу проекту.
+- Результати реалізації: розроблений комплексний підхід дозволяє легко відтворити середовище розробки на будь-якій машині, забезпечує безпечне збереження конфіденційної інформації, гарантує автоматичне виконання ключових налаштувань і дозволяє масштабувати систему за допомогою контейнеризації.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ВИСНОВКИ
+
+У процесі виконання лабораторної роботи було створено комплексну систему для автоматизованого розгортання програмної інфраструктури. Реалізовано контейнеризацію застосунку за допомогою Docker, що спрощує розгортання та масштабування системи. Налаштовано взаємодію між сервісами, такими як Django-застосунок та база даних PostgreSQL, із використанням Docker Compose.
+Додатково розроблено Bash-скрипт для автоматичного створення міграцій, їх застосування та запуску сервера, що підвищує зручність роботи з проектом. Конфіденційні параметри збережено у файлі середовища, що забезпечує безпеку підключення до бази даних та налаштувань середовища.
+Запропоновані рішення дозволяють досягти стабільності роботи системи, легкості її інтеграції в різні середовища та забезпечують високий рівень автоматизації. Це робить систему ефективним та зручним інструментом для розробників і адміністраторів при роботі з сучасними програмними проектами.
+Було створено відеозапис: https://youtu.be/5Bql93mohQA
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ДОДАТОК А
+Програмний код Докеру
+
+        DockerFile:
+     1  # Use the official Python 3.13 image as the base image
+     2  FROM python:3.13
+     3
+     4  # Ensure the output from Python is unbuffered, helpful for logging
+     5  ENV PYTHONUNBUFFERED 1
+     6
+     7  # Set the working directory to /app
+     8  WORKDIR /app
+     9
+    10  # Upgrade pip to the latest version
+    11  RUN python -m pip install --upgrade pip
+    12
+    13  # Copy the requirements file into the container
+    14  COPY requirements.txt .
+    15
+    16  # Install the required Python dependencies
+    17  RUN pip install -r requirements.txt
+    18
+    19  # Copy all project files into the container
+    20  COPY . .
+    21
+    22  # Expose port 8000 to allow external access to the application
+    23  EXPOSE 8000
+    24
+    25  # Define the script to be executed when the container starts
+    26  CMD ["/bin/bash", "/app/migration.sh"]
+
+Docker-Compose:
+     1  services:
+     2    # Define the Django application service
+     3    djangoapp:
+     4      container_name: djangoapp # Set the container name to "djangoapp"
+     5      build: . # Build the image using the Dockerfile in the current directory
+     6      ports:
+     7        - "8000:8000" # Map host port 8000 to container port 8000
+     8      env_file: .env # Use the .env file for environment variables
+     9      depends_on:
+    10        - db # Ensure the database service is started before this service
+    11
+    12    # Define the PostgreSQL database service
+    13    db:
+    14      container_name: db # Set the container name to "db"
+    15      image: postgres:13.18 # Use the PostgreSQL 13.18 image
+    16      environment:
+    17        - POSTGRES_USER=${DB_USER} # Set the PostgreSQL username from the .env file
+    18        - POSTGRES_PASSWORD=${DB_PASSWORD} # Set the PostgreSQL password from the .env file
+    19        - POSTGRES_DB=${DB_NAME} # Set the PostgreSQL database name from the .env file
+    20      ports:
+    21        - "5432:5432" # Map host port 5432 to container port 5432
+    22      volumes:
+    23        - pgdata:/var/lib/postgresql/data # Persist PostgreSQL data using a named volume
+    24
+    25  # Define named volumes
+    26  volumes:
+    27    pgdata: {} # Create a volume named "pgdata"
+
+
+
+
+
+
+
+
+
+
+
+
+
+ДОДАТОК Б
+Програмний код баш-скрипту застосування міграцій
+
+     1  #!/bin/bash
+     2  echo "Create migrations"
+     3  python manage.py makemigrations
+     4  echo "=================================="
+     5
+     6  echo "Migrate"
+     7  python manage.py migrate
+     8  echo "=================================="
+     9
+    10  echo "Start server"
+    11  python manage.py runserver 0.0.0.0:8000
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ДОДАТОК В
+Текстовий файл для завантаження бібліотек
+
+     1  Django==5.1.4
+     2  djangorestframework==3.15.2
+     3  djangorestframework-simplejwt==5.3.1
+     4  drf-yasg==1.21.8
+     5  django-filter==23.1
+     6  matplotlib==3.8.0
+     7  numpy==1.26.2
+     8  reportlab==4.0.0
+     9  psycopg2-binary==2.9.3
+    10  psycopg2
+
