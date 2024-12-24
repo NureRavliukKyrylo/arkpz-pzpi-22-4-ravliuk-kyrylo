@@ -12,10 +12,6 @@ class IoTFillingContainerViewSet(GenericViewSet):
     queryset = IoTFillingContainer.objects.all()
     serializer_class = IoTFillingContainerSerializer
 
-    def get_permissions(self):
-        permission_classes = [IsAdminAuthenticated]
-        return [permission() for permission in permission_classes]
-    
     @swagger_auto_schema(
         operation_description="Create a new Filling level",
         request_body=IoTFillingContainerSerializer,

@@ -11,6 +11,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import status
+import backend.settings as settings
 
 # View to register a new customer
 class RegisterCustomerView(APIView):
@@ -58,8 +59,9 @@ class LoginCustomerView(APIView):
                     'message': 'Login successful',
                 }, status=200)
 
-                response.set_cookie('access_token', access_token, httponly=True, secure=True, max_age=3600, path='/')
-                response.set_cookie('refresh_token', refresh_token, httponly=True, secure=True, max_age=86400, path='/')
+                secure = not settings.DEBUG
+                response.set_cookie('access_token', access_token, httponly=True, secure=secure, max_age=3600, path='/')
+                response.set_cookie('refresh_token', refresh_token, httponly=True, secure=secure, max_age=86400, path='/')
 
                 return response
             except CustomUser.DoesNotExist:

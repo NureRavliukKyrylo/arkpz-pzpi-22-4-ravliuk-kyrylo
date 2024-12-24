@@ -23,4 +23,4 @@ COPY . .
 EXPOSE 8000
 
 # Define the script to be executed when the container starts
-ENTRYPOINT ["/app/migration.sh"]
+CMD ["/bin/bash", "/app/migration.sh"]
